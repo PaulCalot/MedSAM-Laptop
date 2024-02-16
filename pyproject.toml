@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MedSAM-Laptop"
+version = "0.1.0"
+description = "CVPR 2024 Competition which aims to adapt MedSAM to run on a CPU of a laptop."
+authors = [
+    {name = "Calot Paul", email = "calot.paul@gmail.com"},
+]
+readme = "README.md"
+keywords = ["Image Segmentation", "Medical", "Laptop", "Efficient", "SAM"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
