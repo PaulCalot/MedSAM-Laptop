@@ -8,6 +8,9 @@ def load_user_cfg():
     config.read_file(open(path_to_user_cfg))
     return config
 
+def get_path_to_logs(): 
+    return Path(get_item_from_user_cfg("med_sam_laptop", "path_to_logs"))
+
 def get_path_to_data():
     return Path(get_item_from_user_cfg("med_sam_laptop", "path_to_data"))  
 
