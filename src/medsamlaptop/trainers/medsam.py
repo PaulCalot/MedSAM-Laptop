@@ -67,7 +67,8 @@ class MedSamFinetuner:
 
             if epoch_loss_reduced < best_loss:
                 print(f"New best loss: {best_loss:.4f} -> {epoch_loss_reduced:.4f}")
-                checkpoint.best_loss = epoch_loss_reduced
+                best_loss = epoch_loss_reduced
+                checkpoint.best_loss = best_loss
                 checkpoint.save(saving_dir / "best.pth")
 
             epoch_loss_reduced = 1e10
