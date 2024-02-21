@@ -23,6 +23,7 @@ class MedSamFinetuner:
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.loss_fn = loss_fn
+        self.device = device
         self.model.to(device)
 
     def train(self

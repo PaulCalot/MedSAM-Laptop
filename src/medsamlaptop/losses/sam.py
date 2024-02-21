@@ -17,7 +17,7 @@ class SAMLoss:
 
     # TODO: make pred an object containing what is needed
     # same for truth
-    def __call__(self, pred, truth) -> os.Any:
+    def __call__(self, pred, truth):
         logits_pred, iou_pred = pred
         gt2D = truth
         

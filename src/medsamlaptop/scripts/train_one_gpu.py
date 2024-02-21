@@ -1,30 +1,20 @@
 import os
-import monai
-from os import listdir, makedirs
-from os.path import join, exists, isfile, isdir, basename
-from glob import glob
-from tqdm import tqdm, trange
-from copy import deepcopy
-from time import time
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from datetime import datetime
-import cv2
-import torch.nn.functional as F
-from matplotlib import pyplot as plt
+import datetime
 import argparse
 import pathlib
 
-# local lib
+# local packages
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop import trainers
 from medsamlaptop import losses
 from medsamlaptop import data as medsamlaptop_data
 from medsamlaptop.utils.checkpoint import Checkpoint
-from . import utils as script_utils
+from medsamtools import user
+
+# local imports
+import utils as script_utils
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -90,7 +80,18 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+args.work_dir = user.get_path_to_results() / args.work_dir
 args.work_dir.mkdir(exist_ok=True, parents=True)
+
+args.resume = user.get_path_to_results() / args.resume
+args.data_root = user.get_path_to_data() / args.data_root
+args.pretrained_checkpoint = user.get_path_to_pretrained_models() / args.pretrained_checkpoint
+
+print("Using paths:")
+print("Saving results (workdir): {}".format(args.work_dir))
+print("Checkpoint to resume: {}".format(args.resume))
+print("Data: {}".format(args.data_root))
+print("Pretrained: {}".format(args.pretrained_checkpoint))
 
 torch.cuda.empty_cache()
 os.environ["OMP_NUM_THREADS"] = "4" # export OMP_NUM_THREADS=4
@@ -99,14 +100,15 @@ os.environ["MKL_NUM_THREADS"] = "6" # export MKL_NUM_THREADS=6
 os.environ["VECLIB_MAXIMUM_THREADS"] = "4" # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 
-if args.do_sancheck:
+if args.sanity_check:
+    print("SANITY CHECK...")
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
 factory = medsamlaptop_models.MedSAMLiteFactory()
 facade = medsamlaptop_models.SegmentAnythingModelFacade(factory)
 
 if args.pretrained_checkpoint.is_file():
-    facade.load_checkpoint(args.pretrained_checkpoint)
+    facade.load_checkpoint_from_path(args.pretrained_checkpoint)
 
 model = facade.get_model()
 print(f"MedSAM Lite size: {sum(p.numel() for p in model.parameters())}")
@@ -127,7 +129,7 @@ lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 )
 
 train_dataset = medsamlaptop_data.NpyDataset(data_root=args.data_root, data_aug=True)
-train_loader = torch.DataLoader(train_dataset
+train_loader = torch.utils.data.DataLoader(train_dataset
                                 , batch_size=args.batch_size
                                 , shuffle=True
                                 , num_workers=args.num_workers
@@ -139,9 +141,9 @@ loss_fn = losses.SAMLoss(
     , args.iou_loss_weight
 )
 
-if args.checkpoint and args.checkpoint.is_file():
-    print(f"Resuming from checkpoint {args.checkpoint}")
-    checkpoint = Checkpoint.load(args.checkpoint)
+if args.resume.is_file():
+    print(f"Resuming from checkpoint {args.resume}...", end=" ")
+    checkpoint = Checkpoint.load(args.resume)
     facade.load_checkpoint(checkpoint.model_weights)
     optimizer.load_state_dict(checkpoint.optimizer_state)
     start_epoch = checkpoint.epoch
@@ -151,7 +153,7 @@ else:
     start_epoch = 0
     best_loss = 1e10
 
-trainer = trainers.MedSamTrainer(
+trainer = trainers.MedSamFinetuner(
     model
     , train_loader
     , None # val_loader
@@ -164,9 +166,11 @@ trainer = trainers.MedSamTrainer(
 saving_dir = args.work_dir / "{}_training".format(datetime.datetime.now().strftime('%Y%m%d_%H%M'))
 saving_dir.mkdir()
 
+print(f"New training, will save at: {saving_dir}")
+
 trainer.train(
     saving_dir
     , num_epochs=args.num_epochs
-    , epoch=start_epoch
+    , start_epoch=start_epoch
     , best_loss=1e10
 )

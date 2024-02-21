@@ -1,4 +1,4 @@
-import np
+import numpy as np
 import random
 import cv2
 import torch
@@ -7,9 +7,10 @@ import os
 class NpyDataset(torch.utils.data.Dataset): 
     def __init__(self, data_root, image_size=256, bbox_shift=5, data_aug=True):
         self.data_root = data_root
-        self.gt_path = os.path.join(data_root, 'gts')
-        self.img_path = os.path.join(data_root, 'imgs')
-        self.gt_path_files = sorted(os.path.glob(os.path.join(self.gt_path, '*.npy'), recursive=True))
+        self.gt_path = data_root / 'gts'
+        self.img_path = data_root / 'imgs'
+        self.gt_path_files = sorted(self.gt_path.rglob("*.npy"))
+        # os.path.glob(os.path.join(self.gt_path, '*.npy'), recursive=True))
         self.gt_path_files = [
             file for file in self.gt_path_files
             if os.path.isfile(os.path.join(self.img_path, os.path.basename(file)))
@@ -18,7 +19,7 @@ class NpyDataset(torch.utils.data.Dataset):
         self.target_length = image_size
         self.bbox_shift = bbox_shift
         self.data_aug = data_aug
-    
+
     def __len__(self):
         return len(self.gt_path_files)
 
