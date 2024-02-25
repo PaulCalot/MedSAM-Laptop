@@ -6,7 +6,8 @@ from medsamlaptop import data as medsamlaptop_data
 
 class TestNpyDataset(unittest.TestCase):
     data_root = pathlib.Path(pathlib.Path(__file__).resolve() / "../ref_data/npy/CT_Abd").resolve()
-    dataset = medsamlaptop_data.NpyDataset(data_root=data_root, data_aug=True)
+    dataset_factory = medsamlaptop_data.Npy256Factory(path_to_data=data_root)
+    dataset = dataset_factory.create_dataset()
 
     def test_output_shape(self):
         for idx in range(len(self.dataset)):
