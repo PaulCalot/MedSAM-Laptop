@@ -5,6 +5,7 @@ import argparse
 import pathlib
 
 # local packages
+from medsamlaptop import facade as medsamlaptop_facade
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop import trainers
 from medsamlaptop import losses
@@ -14,7 +15,6 @@ from medsamtools import user
 
 # local imports
 import utils as script_utils
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -104,8 +104,13 @@ if args.sanity_check:
     print("SANITY CHECK...")
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
-factory = medsamlaptop_models.MedSAMLiteFactory()
-facade = medsamlaptop_models.SegmentAnythingModelFacade(factory)
+model_factory = medsamlaptop_models.MedEdgeSAMFactory()
+dataset_factory = medsamlaptop_data.Npy1024Factory(args.data_root)
+# model_factory = medsamlaptop_models.MedSAMLiteFactory()
+# dataset_factory = medsamlaptop_data.Npy256Factory(args.data_root)
+facade = medsamlaptop_facade.SegmentAnythingPipeFacade(
+                model_factory
+                , dataset_factory)
 
 if args.pretrained_checkpoint.is_file():
     facade.load_checkpoint_from_path(args.pretrained_checkpoint)
@@ -128,7 +133,10 @@ lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     cooldown=0
 )
 
-train_dataset = medsamlaptop_data.NpyDataset(data_root=args.data_root, data_aug=True)
+train_dataset = facade.get_dataset()
+# train_dataset = medsamlaptop_data.NpyDataset(data_root=args.data_root
+#                                              , data_aug=True
+#                                              , image_size=256) # depends on the model
 train_loader = torch.utils.data.DataLoader(train_dataset
                                 , batch_size=args.batch_size
                                 , shuffle=True
