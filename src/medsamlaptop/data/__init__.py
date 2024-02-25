@@ -1,1 +1,5 @@
-from .npy import NpyDataset
+from .factories import (
+    DatasetFactoryInterface
+    , Npy1024Factory
+    , Npy256Factory
+)
