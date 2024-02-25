@@ -13,6 +13,7 @@ class MedSAMLite(SegmentAnythingModelInterface):
         self.prompt_encoder = prompt_encoder
         
     def forward(self, image, boxes):
+        
         image_embedding = self.image_encoder(image) # (B, 256, 64, 64)
 
         sparse_embeddings, dense_embeddings = self.prompt_encoder(
