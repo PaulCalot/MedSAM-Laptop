@@ -1,9 +1,9 @@
-from .interface import FactoryInterface
+from .interface import ModelFactoryInterface
 
 from ..products import MedSAMLite
 from .. import core as core_models
 
-class MedSAMLiteFactory(FactoryInterface):
+class MedSAMLiteFactory(ModelFactoryInterface):
     def __init__(self) -> None:
         super().__init__()
 

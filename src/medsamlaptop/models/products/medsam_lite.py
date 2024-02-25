@@ -3,7 +3,7 @@ import torch
 
 class MedSAMLite(SegmentAnythingModelInterface):
     def __init__(self, 
-                image_encoder, 
+                image_encoder, # TODO: add abstract class
                 mask_decoder,
                 prompt_encoder
                 ):

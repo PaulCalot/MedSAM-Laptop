@@ -19,7 +19,7 @@ class MedEdgeSAM(SegmentAnythingModelInterface):
 
     def __init__(
         self,
-        image_encoder: ImageEncoderViT,
+        image_encoder: ImageEncoderViT, # TODO: modify this, this is not an abstract class
         prompt_encoder: PromptEncoder,
         mask_decoder: MaskDecoder,
         pixel_mean: List[float] = [123.675, 116.28, 103.53],

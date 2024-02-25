@@ -5,7 +5,7 @@ from ..products import SegmentAnythingModelInterface
 # and factory
 # this way, we are certain it will be clean
 
-class FactoryInterface(abc.ABC):
+class ModelFactoryInterface(abc.ABC):
     @abc.abstractmethod
     def create_model(self) -> SegmentAnythingModelInterface:
         pass

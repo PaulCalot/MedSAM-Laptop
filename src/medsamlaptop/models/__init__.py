@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .factories import (
-    MedSAMLiteFactory
+    ModelFactoryInterface
+    , MedSAMLiteFactory
     , MedEdgeSAMFactory
 )
-from .facade import SegmentAnythingModelFacade

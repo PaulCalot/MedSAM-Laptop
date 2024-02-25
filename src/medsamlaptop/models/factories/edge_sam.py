@@ -3,7 +3,7 @@
 
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-from .interface import FactoryInterface
+from .interface import ModelFactoryInterface
 
 from ..products import MedEdgeSAM
 from .. import core as core_models
@@ -13,7 +13,7 @@ image_size = 1024
 vit_patch_size = 16
 image_embedding_size = image_size // vit_patch_size # 64
 
-class MedEdgeSAMFactory(FactoryInterface):
+class MedEdgeSAMFactory(ModelFactoryInterface):
     def __init__(self) -> None:
         super().__init__()
 
