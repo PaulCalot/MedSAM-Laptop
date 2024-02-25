@@ -4,13 +4,14 @@ import cv2
 import torch
 import os
 
+# TODO: for now it is intestable
+# because it depends on external data...
 class NpyDataset(torch.utils.data.Dataset): 
     def __init__(self, data_root, image_size=256, bbox_shift=5, data_aug=True):
         self.data_root = data_root
         self.gt_path = data_root / 'gts'
         self.img_path = data_root / 'imgs'
         self.gt_path_files = sorted(self.gt_path.rglob("*.npy"))
-        # os.path.glob(os.path.join(self.gt_path, '*.npy'), recursive=True))
         self.gt_path_files = [
             file for file in self.gt_path_files
             if os.path.isfile(os.path.join(self.img_path, os.path.basename(file)))
@@ -69,7 +70,7 @@ class NpyDataset(torch.utils.data.Dataset):
         y_max = min(H, y_max + random.randint(0, self.bbox_shift))
         bboxes = np.array([x_min, y_min, x_max, y_max])
         return {
-            "image": torch.tensor(img_padded).float(),
+            "image": torch.tensor(img_padded).float(), # 
             "gt2D": torch.tensor(gt2D[None, :,:]).long(),
             "bboxes": torch.tensor(bboxes[None, None, ...]).float(), # (B, 1, 4)
             "image_name": img_name,
