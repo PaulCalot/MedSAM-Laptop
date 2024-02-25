@@ -7,7 +7,11 @@ import os
 # TODO: for now it is intestable
 # because it depends on external data...
 class NpyDataset(torch.utils.data.Dataset): 
-    def __init__(self, data_root, image_size=256, bbox_shift=5, data_aug=True):
+    def __init__(self
+                 , data_root
+                 , image_size=256 # This image size is the target length at the end of this preprocessing
+                 , bbox_shift=5
+                 , data_aug=True):
         self.data_root = data_root
         self.gt_path = data_root / 'gts'
         self.img_path = data_root / 'imgs'
