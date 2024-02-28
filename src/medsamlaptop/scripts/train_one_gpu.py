@@ -80,7 +80,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model_type", default="medSAMLite",
-    help="Type of backbone model : edgeSAM, medSAMLite. Default: medSAMLite"
+    help="Type of backbone model",
+    choices=["edgeSAM", "medSAMLite"]
 )
 
 args = parser.parse_args()
