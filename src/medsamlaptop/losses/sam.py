@@ -4,6 +4,7 @@ import os
 
 class SAMLoss:
     # TODO: make it compatible with pytorch loss
+    # i.e. derive it from torch.nn.Module and call forward I believe
     def __init__(self
                  , seg_loss_weight: float
                  , ce_loss_weight: float
