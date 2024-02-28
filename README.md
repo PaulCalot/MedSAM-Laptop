@@ -47,5 +47,4 @@ python src/medsamlaptop/scripts/train_one_gpu.py \
     -device cuda:0 \
     -model_type edgeSAM
 ```
-
-Replace with your own path, for the pretrained checkpoint and root of the data npy files.
+Replace with your own path, relatively to the path used in the *user.cfg*, for the pretrained checkpoint and root of the data npy files.
