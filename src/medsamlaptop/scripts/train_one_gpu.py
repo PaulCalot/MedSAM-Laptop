@@ -109,10 +109,10 @@ if args.sanity_check:
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
 if(args.model_type=="edgeSAM"):
-    model_factory = medsamlaptop_models.MedEdgeSAMFactory()
-    dataset_factory = medsamlaptop_data.Npy1024Factory(args.data_root)
+    model_factory: medsamlaptop_models.ModelFactoryInterface = medsamlaptop_models.MedEdgeSAMFactory()
+    dataset_factory: medsamlaptop_data.DatasetFactoryInterface = medsamlaptop_data.Npy1024Factory(args.data_root)
 elif(args.model_type=="medSAMLite"):
-    model_factory = medsamlaptop_models.MedSAMLiteFactory()
+    model_factory  = medsamlaptop_models.MedSAMLiteFactory()
     dataset_factory = medsamlaptop_data.Npy256Factory(args.data_root)
 facade = medsamlaptop_facade.SegmentAnythingPipeFacade(
                 model_factory
@@ -164,7 +164,7 @@ else:
     start_epoch = 0
     best_loss = 1e10
 
-trainer = trainers.MedSamFinetuner(
+trainer = trainers.MedSamTrainer(
     model
     , train_loader
     , None # val_loader

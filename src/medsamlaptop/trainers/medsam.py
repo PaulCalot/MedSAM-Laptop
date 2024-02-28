@@ -9,7 +9,7 @@ from medsamlaptop.utils.checkpoint import Checkpoint
 from medsamlaptop.plot.losses import plot_and_save_loss
 
 # TODO: to be updated once interface are in place
-class MedSamFinetuner:
+class MedSamTrainer:
     def __init__(self
                  , model: SegmentAnythingModelInterface
                  , train_loader
