@@ -21,20 +21,20 @@ from medsamtools import user
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-data_root", type=pathlib.Path, default=pathlib.Path("./data/npy"),
+    "--data_root", type=pathlib.Path, default=pathlib.Path("./data/npy"),
     help="Path to the npy data root."
 )
 parser.add_argument(
-    "-pretrained_checkpoint", type=pathlib.Path, default=pathlib.Path("lite_medsam.pth"),
+    "--pretrained_checkpoint", type=pathlib.Path, default=pathlib.Path("lite_medsam.pth"),
     help="Path to the pretrained checkpoint."
 )
 parser.add_argument(
-    "-model_type", default="MedSAM",
+    "--model_type", default="MedSAM",
     help="Type of backbone model : MedSAM. Default: MedSAM",
     choices=["MedSAM"]
 )
 parser.add_argument(
-    "-device", type=str, default="cuda:0",
+    "--device", type=str, default="cuda:0",
     help="Device to train on."
 )
 
@@ -80,7 +80,7 @@ with torch.no_grad():
         output = dataset[i]
         img_tensor = output["image"].to(args.device)
         name = output["image_name"]
-        image_embedding = model.image_encoder(img_tensor)  # (1, 256, 64, 64)
-        image_embedding.cpu()
-        np.save(args.output_dir / f"{name}.npy"
+        image_embedding = model.image_encoder(torch.unsqueeze(img_tensor, 0))  # output: (1, 256, 64, 64)
+        image_embedding = image_embedding.cpu().numpy()
+        np.save(args.output_dir / name # name already contains .npy
                 , image_embedding)
