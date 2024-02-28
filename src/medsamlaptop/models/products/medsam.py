@@ -12,8 +12,7 @@ from ..core import ImageEncoderViT
 from ..core import MaskDecoder
 from ..core import PromptEncoder
 
-
-class MedEdgeSAM(SegmentAnythingModelInterface):
+class MedSAM(SegmentAnythingModelInterface):
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 

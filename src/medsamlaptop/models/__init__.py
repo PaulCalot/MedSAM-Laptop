@@ -3,4 +3,5 @@ from .factories import (
     ModelFactoryInterface
     , MedSAMLiteFactory
     , MedEdgeSAMFactory
+    , MedSAMFactory
 )
