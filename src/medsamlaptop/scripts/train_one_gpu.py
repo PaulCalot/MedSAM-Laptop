@@ -107,6 +107,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 
 if args.sanity_check:
     print("SANITY CHECK...")
+    # TODO: Check if can delete this as we now have the unit testing of the dataset
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
 if(args.model_type=="edgeSAM"):
