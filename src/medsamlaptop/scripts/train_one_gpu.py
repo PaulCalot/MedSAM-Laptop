@@ -112,6 +112,7 @@ if args.sanity_check:
     # It is not replaced with the unittest
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
+# TODO: make better passing of the parameters, may be per factory ?
 meta_factory = medsamlaptop_facade.MetaFactory(
     run_type= constants.TRAIN_RUN_TYPE # for now
     , model_type=args.model_type
@@ -124,18 +125,17 @@ meta_factory = medsamlaptop_facade.MetaFactory(
         , "ce_loss_weight": args.ce_loss_weight
         , "iou_loss_weight": args.iou_loss_weight
     }
+    , kwargs_dataloaders={
+        "batch_size": args.batch_size
+        , "num_workers": args.num_workers
+        , "shuffle": True
+        , "pin_memory": True
+    }
     , pretrained_checkpoint=args.pretrained_checkpoint
 )
 facade = medsamlaptop_facade.TrainSegmentAnythingPipeFacade(meta_factory)
 
-train_dataset = facade.get_dataset()
-
-# TODO: change this ! Dataloader should also have its own factory
-train_loader = torch.utils.data.DataLoader(train_dataset
-                                , batch_size=args.batch_size
-                                , shuffle=True
-                                , num_workers=args.num_workers
-                                , pin_memory=True)
+# TODO: the following could / should be able from the Facade directly, it would be even cleaner
 if args.resume.is_file():
     print(f"Resuming from checkpoint {args.resume}...", end=" ")
     checkpoint = Checkpoint.load(args.resume)
@@ -150,8 +150,7 @@ saving_dir = args.work_dir / "{}_training".format(datetime.datetime.now().strfti
 saving_dir.mkdir()
 
 facade.train(
-    train_loader
-    , saving_dir
+    saving_dir
     , num_epochs=args.num_epochs
     , start_epoch=start_epoch
     , best_loss=1e10
