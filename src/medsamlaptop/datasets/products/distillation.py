@@ -39,7 +39,7 @@ class EncoderDistillationDataset(DatasetInterface):
         # with batch size would be (B, 256, 64, 64)
         return {
             "image": torch.tensor(img_padded).float(),
-            "encoder_gts": torch.tensor(gt).long(),
+            "encoder_gts": torch.squeeze(torch.tensor(gt).float()), # TODO: is the squeeze ok ?
             "image_name": img_name,
             "new_size": torch.tensor(np.array([img_resize.shape[0], img_resize.shape[1]])).long(),
             "original_size": torch.tensor(np.array([img_3c.shape[0], img_3c.shape[1]])).long()
