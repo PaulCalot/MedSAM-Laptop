@@ -1,6 +1,6 @@
 from .interface import BaseTrainer
 
-class MedSamTrainer(BaseTrainer):
+class SamTrainer(BaseTrainer):
     def handle_batch(self, batch):
         # Extract and send data to the device (GPU/CPU)
         image = batch["image"].to(self.device)

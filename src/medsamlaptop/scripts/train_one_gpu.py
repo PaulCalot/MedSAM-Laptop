@@ -5,6 +5,7 @@ import argparse
 import pathlib
 
 # local packages
+from medsamlaptop import constants
 from medsamlaptop import facade as medsamlaptop_facade
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop import trainers
@@ -108,23 +109,23 @@ os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 if args.sanity_check:
     print("SANITY CHECK...")
     # TODO: Check if can delete this as we now have the unit testing of the dataset
+    # Actually, it is still required. Indeed, this is for checking if all data is fine before
+    # training as to not "waste" 1 epoch to see that one image is missing the ground truth
+    # It is not replaced with the unittest
     script_utils.checks.perform_dataset_sanity_check(args.data_root)
 
-if(args.model_type=="edgeSAM"):
-    model_factory: medsamlaptop_models.ModelFactoryInterface = medsamlaptop_models.MedEdgeSAMFactory()
-    dataset_factory: medsamlaptop_data.DatasetFactoryInterface = medsamlaptop_data.Npy1024Factory(args.data_root)
-elif(args.model_type=="medSAMLite"):
-    model_factory  = medsamlaptop_models.MedSAMLiteFactory()
-    dataset_factory = medsamlaptop_data.Npy256Factory(args.data_root)
-facade = medsamlaptop_facade.SegmentAnythingPipeFacade(
-                model_factory
-                , dataset_factory)
+meta_factory = medsamlaptop_facade.MetaFactory(
+    run_type= constants.TRAIN_RUN_TYPE # for now
+    , model_type=args.model_type
+    , data_root=args.data_root
+)
+facade = medsamlaptop_facade.MetaSegmentAnythingPipeFacade(meta_factory)
 
 if args.pretrained_checkpoint.is_file():
     facade.load_checkpoint_from_path(args.pretrained_checkpoint)
 
 model = facade.get_model()
-print(f"MedSAM Lite size: {sum(p.numel() for p in model.parameters())}")
+print(f"Model size: {sum(p.numel() for p in model.parameters())}")
 
 optimizer = torch.optim.AdamW(
     model.parameters(),
@@ -166,7 +167,7 @@ else:
     start_epoch = 0
     best_loss = 1e10
 
-trainer = trainers.MedSamTrainer(
+trainer = trainers.SamTrainer(
     model
     , optimizer
     , loss_fn

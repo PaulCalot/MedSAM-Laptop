@@ -1,1 +1,1 @@
-from .medsam import MedSamTrainer
+from .medsam import SamTrainer

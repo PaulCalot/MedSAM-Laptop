@@ -2,10 +2,36 @@ from ..models import ModelFactoryInterface
 from ..data import DatasetFactoryInterface
 from ..models.products import SegmentAnythingModelInterface
 from ..data.products import DatasetInterface
-
+from .meta_factory import MetaFactory
 import torch
 import pathlib
 
+class MetaSegmentAnythingPipeFacade:
+    def __init__(self
+                 , meta_factory: MetaFactory) -> None:
+        self.model: SegmentAnythingModelInterface = meta_factory.create_model()
+        self.dataset: DatasetInterface = meta_factory.create_dataset()
+
+    def load_checkpoint_from_path(self, path: pathlib.Path):
+        # TODO: may be add try / except
+        checkpoint = torch.load(
+                path,
+                map_location="cpu"
+        )
+        self.load_checkpoint(checkpoint)
+
+    def load_checkpoint(self, checkpoint):
+        self.model.load_state_dict(checkpoint, strict=True)
+
+    def get_model(self):
+        return self.model
+
+    def set_model(self, model: SegmentAnythingModelInterface):
+        self.model = model
+
+    def get_dataset(self):
+        return self.dataset
+    
 class SegmentAnythingPipeFacade:
     def __init__(self
                  , model_factory: ModelFactoryInterface
