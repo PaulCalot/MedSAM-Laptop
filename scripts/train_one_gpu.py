@@ -17,60 +17,60 @@ import utils as script_utils
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-data_root", type=pathlib.Path, default=pathlib.Path("./data/npy"),
+    "--data_root", type=pathlib.Path, default=pathlib.Path("./data/npy"),
     help="Path to the npy data root."
 )
 parser.add_argument(
-    "-pretrained_checkpoint", type=pathlib.Path, default=pathlib.Path("lite_medsam.pth"),
+    "--pretrained_checkpoint", type=pathlib.Path, default=pathlib.Path("lite_medsam.pth"),
     help="Path to the pretrained Lite-MedSAM checkpoint."
 )
 parser.add_argument(
-    "-resume", type=pathlib.Path, default=pathlib.Path('workdir/medsam_lite_latest.pth'),
+    "--resume", type=pathlib.Path, default=pathlib.Path('workdir/medsam_lite_latest.pth'),
     help="Path to the checkpoint to continue training."
 )
 parser.add_argument(
-    "-work_dir", type=pathlib.Path, default=pathlib.Path("./workdir"),
+    "--work_dir", type=pathlib.Path, default=pathlib.Path("./workdir"),
     help="Path to the working directory where checkpoints and logs will be saved."
 )
 parser.add_argument(
-    "-num_epochs", type=int, default=10,
+    "--num_epochs", type=int, default=10,
     help="Number of epochs to train."
 )
 parser.add_argument(
-    "-batch_size", type=int, default=4,
+    "--batch_size", type=int, default=4,
     help="Batch size."
 )
 parser.add_argument(
-    "-num_workers", type=int, default=8,
+    "--num_workers", type=int, default=8,
     help="Number of workers for dataloader."
 )
 parser.add_argument(
-    "-device", type=str, default="cuda:0",
+    "--device", type=str, default="cuda:0",
     help="Device to train on."
 )
 parser.add_argument(
-    "-bbox_shift", type=int, default=5,
+    "--bbox_shift", type=int, default=5,
     help="Perturbation to bounding box coordinates during training."
 )
 parser.add_argument(
-    "-lr", type=float, default=0.00005,
+    "--lr", type=float, default=0.00005,
     help="Learning rate."
 )
 parser.add_argument(
-    "-weight_decay", type=float, default=0.01,
+    "--weight_decay", type=float, default=0.01,
     help="Weight decay."
 
 )
 parser.add_argument(
-    "-iou_loss_weight", type=float, default=1.0,
+    "--iou_loss_weight", type=float, default=1.0,
     help="Weight of IoU loss."
 )
 parser.add_argument(
-    "-seg_loss_weight", type=float, default=1.0,
+    "--seg_loss_weight", type=float, default=1.0,
     help="Weight of segmentation loss."
 )
 parser.add_argument(
-    "-ce_loss_weight", type=float, default=1.0,
+    "--ce_loss_weight", type=float, default=1.0,
     help="Weight of cross entropy loss."
 )
 parser.add_argument(
@@ -78,11 +78,15 @@ parser.add_argument(
     help="Whether to do sanity check for dataloading."
 )
 parser.add_argument(
-    "--model_type", default="medSAMLite",
+    "--model_type", default=constants.MED_SAM_LITE_NAME,
     help="Type of backbone model",
-    choices=["edgeSAM", "medSAMLite"]
+    choices=[constants.MED_SAM_LITE_NAME, constants.EDGE_SAM_NAME]
 )
-
+parser.add_argument(
+    "--run_type", default=constants.TRAIN_RUN_TYPE,
+    help="Type of run",
+    choices=[constants.ENCODER_DISTILLATION_RUN_TYPE, constants.TRAIN_RUN_TYPE]
+)
 args = parser.parse_args()
 args.work_dir = user.get_path_to_results() / args.work_dir
 args.work_dir.mkdir(exist_ok=True, parents=True)
@@ -114,7 +118,7 @@ if args.sanity_check:
 
 # TODO: make better passing of the parameters, may be per factory ?
 meta_factory = medsamlaptop_facade.MetaFactory(
-    run_type= constants.TRAIN_RUN_TYPE # for now
+    run_type= args.run_type
     , model_type=args.model_type
     , data_root=args.data_root
     , lr=args.lr
@@ -134,7 +138,7 @@ meta_factory = medsamlaptop_facade.MetaFactory(
     , pretrained_checkpoint=args.pretrained_checkpoint
 )
 facade = medsamlaptop_facade.TrainSegmentAnythingPipeFacade(meta_factory)
-
+print(facade)
 # TODO: the following could / should be able from the Facade directly, it would be even cleaner
 if args.resume.is_file():
     print(f"Resuming from checkpoint {args.resume}...", end=" ")
