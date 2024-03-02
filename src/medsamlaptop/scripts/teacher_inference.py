@@ -12,10 +12,11 @@ import numpy as np
 import tqdm
 
 # local packages
-from medsamlaptop import constants
 from medsamlaptop import facade as medsamlaptop_facade
+from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop.models.products.interface import SegmentAnythingModelInterface
 from medsamlaptop.data.products.npy import NpyDataset # this is a concrete class
+from medsamlaptop import data as medsamlaptop_data
 from medsamtools import user
 
 parser = argparse.ArgumentParser()
@@ -55,12 +56,13 @@ os.environ["MKL_NUM_THREADS"] = "6" # export MKL_NUM_THREADS=6
 os.environ["VECLIB_MAXIMUM_THREADS"] = "4" # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 
-meta_factory = medsamlaptop_facade.MetaFactory(
-    run_type= constants.TRAIN_RUN_TYPE # for now
-    , model_type=args.model_type
-    , data_root=args.data_root
-)
-facade = medsamlaptop_facade.MetaSegmentAnythingPipeFacade(meta_factory)
+if(args.model_type=="MedSAM"):
+    model_factory: medsamlaptop_models.ModelFactoryInterface = medsamlaptop_models.MedSAMFactory()
+    dataset_factory: medsamlaptop_data.DatasetFactoryInterface = medsamlaptop_data.Npy1024Factory(args.data_root)
+
+facade = medsamlaptop_facade.InferSegmentAnythingPipeFacade(
+                model_factory
+                , dataset_factory)
 
 if args.pretrained_checkpoint.is_file():
     facade.load_checkpoint_from_path(args.pretrained_checkpoint)

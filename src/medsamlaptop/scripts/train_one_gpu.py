@@ -116,69 +116,40 @@ meta_factory = medsamlaptop_facade.MetaFactory(
     run_type= constants.TRAIN_RUN_TYPE # for now
     , model_type=args.model_type
     , data_root=args.data_root
+    , lr=args.lr
+    , weight_decay=args.weight_decay
+    , device=torch.device(args.device)
+    , kwargs_loss={
+        "seg_loss_weight": args.seg_loss_weight
+        , "ce_loss_weight": args.ce_loss_weight
+        , "iou_loss_weight": args.iou_loss_weight
+    }
+    , pretrained_checkpoint=args.pretrained_checkpoint
 )
-facade = medsamlaptop_facade.MetaSegmentAnythingPipeFacade(meta_factory)
-
-if args.pretrained_checkpoint.is_file():
-    facade.load_checkpoint_from_path(args.pretrained_checkpoint)
-
-model = facade.get_model()
-print(f"Model size: {sum(p.numel() for p in model.parameters())}")
-
-optimizer = torch.optim.AdamW(
-    model.parameters(),
-    lr=args.lr,
-    betas=(0.9, 0.999),
-    eps=1e-08,
-    weight_decay=args.weight_decay,
-)
-lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer,
-    mode='min',
-    factor=0.9,
-    patience=5,
-    cooldown=0
-)
+facade = medsamlaptop_facade.TrainSegmentAnythingPipeFacade(meta_factory)
 
 train_dataset = facade.get_dataset()
+
+# TODO: change this ! Dataloader should also have its own factory
 train_loader = torch.utils.data.DataLoader(train_dataset
                                 , batch_size=args.batch_size
                                 , shuffle=True
                                 , num_workers=args.num_workers
                                 , pin_memory=True)
-
-loss_fn = losses.SAMLoss(
-    args.seg_loss_weight
-    , args.ce_loss_weight
-    , args.iou_loss_weight
-)
-
 if args.resume.is_file():
     print(f"Resuming from checkpoint {args.resume}...", end=" ")
     checkpoint = Checkpoint.load(args.resume)
-    facade.load_checkpoint(checkpoint.model_weights)
-    optimizer.load_state_dict(checkpoint.optimizer_state)
+    facade.load_checkpoint(checkpoint)
     start_epoch = checkpoint.epoch
     best_loss = checkpoint.loss
-    print(f"Loaded checkpoint from epoch {start_epoch}")
 else:
     start_epoch = 0
     best_loss = 1e10
 
-trainer = trainers.SamTrainer(
-    model
-    , optimizer
-    , loss_fn
-    , lr_scheduler
-    , device=args.device
-)
-
 saving_dir = args.work_dir / "{}_training".format(datetime.datetime.now().strftime('%Y%m%d_%H%M'))
 saving_dir.mkdir()
 
-print(f"New training, will save at: {saving_dir}")
-
-trainer.train(
+facade.train(
     train_loader
     , saving_dir
     , num_epochs=args.num_epochs
