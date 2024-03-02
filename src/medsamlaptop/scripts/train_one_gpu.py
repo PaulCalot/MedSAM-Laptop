@@ -168,11 +168,9 @@ else:
 
 trainer = trainers.MedSamTrainer(
     model
-    , train_loader
-    , None # val_loader
     , optimizer
-    , lr_scheduler
     , loss_fn
+    , lr_scheduler
     , device=args.device
 )
 
@@ -182,7 +180,8 @@ saving_dir.mkdir()
 print(f"New training, will save at: {saving_dir}")
 
 trainer.train(
-    saving_dir
+    train_loader
+    , saving_dir
     , num_epochs=args.num_epochs
     , start_epoch=start_epoch
     , best_loss=1e10
