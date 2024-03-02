@@ -1,1 +1,1 @@
-from medsamlaptop.scripts.utils import checks
+from . import checks
