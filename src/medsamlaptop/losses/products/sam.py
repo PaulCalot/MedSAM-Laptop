@@ -1,10 +1,7 @@
 import torch
 import monai
-import os
 
-class SAMLoss:
-    # TODO: make it compatible with pytorch loss
-    # i.e. derive it from torch.nn.Module and call forward I believe
+class SAMLoss(torch.nn.Module):
     def __init__(self
                  , seg_loss_weight: float
                  , ce_loss_weight: float
@@ -16,9 +13,7 @@ class SAMLoss:
         self.ce_loss_weight = ce_loss_weight
         self.iou_loss_weight = iou_loss_weight
 
-    # TODO: make pred an object containing what is needed
-    # same for truth
-    def __call__(self, pred, truth):
+    def forward(self, pred, truth):
         logits_pred, iou_pred = pred
         gt2D = truth
         
@@ -30,7 +25,7 @@ class SAMLoss:
         mask_loss = self.seg_loss_weight * l_seg + self.ce_loss_weight * l_ce
         loss = mask_loss + self.iou_loss_weight * l_iou
         return loss
-    
+
 def IoULoss(result, reference):    
     intersection = torch.count_nonzero(torch.logical_and(result, reference), dim=[i for i in range(1, result.ndim)])
     union = torch.count_nonzero(torch.logical_or(result, reference), dim=[i for i in range(1, result.ndim)])

@@ -1,1 +1,4 @@
-from .sam import SAMLoss
+from .factories import (
+    LossFactoryInterface
+    , SamLossFactory
+)
