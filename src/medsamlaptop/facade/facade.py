@@ -24,6 +24,18 @@ class TrainSegmentAnythingPipeFacade:
             , self.loss
             , self.scheduler
         )
+    
+    def __str__(self) -> str:
+        representation_parts = [
+                "Training parameters:\n\t"
+                , f"\tModel:{str(self.model.__class__)}"
+                , f"\tDataset:{str(self.dataset)}"
+                , f"\tOptimizer:{str(self.optimizer)}"
+                , f"\tScheduler:{str(self.scheduler)}"
+                , f"\tLoss:{str(self.loss)}"
+                , f"\tTrainer:{str(self.trainer)}"]
+        representation = "\n".join(representation_parts)
+        return representation
 
     def load_checkpoint(self, checkpoint: Checkpoint):
         self.model.load_state_dict(checkpoint.model_weights, strict=True)

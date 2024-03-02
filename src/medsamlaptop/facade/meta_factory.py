@@ -89,11 +89,12 @@ class MetaFactory:
                 return {
                     "model": medsamlaptop_models.MedEdgeSAMFactory()
                     , "dataset": medsamlaptop_datasets.Distillation1024Factory(self.data_root)
-                    , "dataloader": None # TODO
-                    , "optimizer": None # TODO
-                    , "scheduler": None # TODO                
-                    , "loss": None # TODO
-                    , "trainer": None # TODO
+                    # NOTE: for now same as Sam
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
+                    , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
+                    , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()          
+                    , "loss": medsamlaptop_losses.EncoderDistillationLossFactory()
+                    , "trainer": medsamlaptop_trainers.EncoderDistillerFactory(self.device) # TODO
                 }
             case _:
                 raise NotImplementedError(f"Build type {self.build_type} not implemented")
@@ -106,6 +107,10 @@ class MetaFactory:
         model = self.factories["model"].create_model()
         if(self.pretrained_checkpoint.is_file()):
             return self.load_model_checkpoint_from_path(model)
+        
+        # TODO: may be this is not the best thing...
+        if(self.run_type == constants.ENCODER_DISTILLATION_RUN_TYPE):
+            return model.get_encoder()
         return model
 
     def create_dataset(self) -> DatasetInterface:
