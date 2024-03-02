@@ -47,3 +47,6 @@ class MedSAMLite(SegmentAnythingModelInterface):
         )
 
         return masks
+    
+    def get_encoder(self):
+        return self.image_encoder
