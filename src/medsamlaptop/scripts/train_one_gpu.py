@@ -7,10 +7,8 @@ import pathlib
 # local packages
 from medsamlaptop import constants
 from medsamlaptop import facade as medsamlaptop_facade
-from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop import trainers
 from medsamlaptop import losses
-from medsamlaptop import data as medsamlaptop_data
 from medsamlaptop.utils.checkpoint import Checkpoint
 from medsamtools import user
 

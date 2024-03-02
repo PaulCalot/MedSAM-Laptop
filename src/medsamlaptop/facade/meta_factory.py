@@ -6,6 +6,7 @@ class MetaFactory:
     AVAILABLE_BUILDS = (
         (constants.TRAIN_RUN_TYPE, constants.EDGE_SAM_NAME)
         , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_LITE_NAME)
+        , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_NAME)
         , (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME)
     )
     def __init__(self
@@ -30,6 +31,11 @@ class MetaFactory:
                 return {
                     "model": medsamlaptop_models.MedSAMLiteFactory()
                     , "dataset": medsamlaptop_data.Npy256Factory(self.data_root)
+                }
+            case (constants.TRAIN_RUN_TYPE, constants.MED_SAM_NAME):
+                return {
+                    "model": medsamlaptop_models.MedSAMFactory()
+                    , "dataset": medsamlaptop_data.Npy1024Factory(self.data_root)
                 }
             case (constants.TRAIN_RUN_TYPE, constants.EDGE_SAM_NAME):
                 return {
