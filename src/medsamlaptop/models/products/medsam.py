@@ -168,14 +168,14 @@ class MedSAM(SegmentAnythingModelInterface):
           (torch.Tensor): Batched masks in BxCxHxW format, where (H, W)
             is given by original_size.
         """
-        masks = F.interpolate(
+        masks = torch.nn.functional.interpolate(
             masks,
             (self.image_encoder.img_size, self.image_encoder.img_size),
             mode="bilinear",
             align_corners=False,
         )
         masks = masks[..., : input_size[0], : input_size[1]]
-        masks = F.interpolate(
+        masks = torch.nn.functional.interpolate(
             masks, original_size, mode="bilinear", align_corners=False
         )
         return masks
@@ -191,3 +191,6 @@ class MedSAM(SegmentAnythingModelInterface):
         padw = self.image_encoder.img_size - w
         x = F.pad(x, (0, padw, 0, padh))
         return x
+
+    def get_encoder(self):
+      return self.image_encoder
