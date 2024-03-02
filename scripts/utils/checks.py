@@ -4,6 +4,7 @@ import random
 import pathlib
 import logging
 
+# TODO: should we add this to the medsamlaptop ??
 # local lib
 import medsamlaptop
 import medsamtools
