@@ -16,7 +16,7 @@ from medsamlaptop import facade as medsamlaptop_facade
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop.models.products.interface import SegmentAnythingModelInterface
 from medsamlaptop.data.products.npy import NpyDataset # this is a concrete class
-from medsamlaptop import data as medsamlaptop_data
+from medsamlaptop import data as medsamlaptop_datasets
 from medsamtools import user
 
 parser = argparse.ArgumentParser()
@@ -58,7 +58,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 
 if(args.model_type=="MedSAM"):
     model_factory: medsamlaptop_models.ModelFactoryInterface = medsamlaptop_models.MedSAMFactory()
-    dataset_factory: medsamlaptop_data.DatasetFactoryInterface = medsamlaptop_data.Npy1024Factory(args.data_root)
+    dataset_factory: medsamlaptop_datasets.DatasetFactoryInterface = medsamlaptop_datasets.Npy1024Factory(args.data_root)
 
 facade = medsamlaptop_facade.InferSegmentAnythingPipeFacade(
                 model_factory
