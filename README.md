@@ -27,7 +27,7 @@ Replace with your own path.
 
 ## Use
 ```shell
-python src/medsamlaptop/scripts/train_one_gpu.py \
+python scripts/train_one_gpu.py \
     -data_root FLARE22Train/data/npy/CT_Abd/ \
     -pretrained_checkpoint little-med-sam/lite_medsam.pth \
     -work_dir DEV \
@@ -37,7 +37,7 @@ python src/medsamlaptop/scripts/train_one_gpu.py \
     -device cuda:0 \
     -model_type medSAMLite
 
-python src/medsamlaptop/scripts/train_one_gpu.py \
+python scripts/train_one_gpu.py \
     -data_root FLARE22Train/data/npy/CT_Abd/ \
     -pretrained_checkpoint edge-sam/edge_sam_3x.pth \
     -work_dir DEV \
