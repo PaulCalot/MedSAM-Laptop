@@ -12,7 +12,7 @@ class BaseTrainer(abc.ABC):
                  , loss_fn
                  , lr_scheduler
                  , device):
-        self.model = model
+        self.model = model.to(device)
         self.optimizer = optimizer
         self.loss_fn = loss_fn
         self.lr_scheduler = lr_scheduler
