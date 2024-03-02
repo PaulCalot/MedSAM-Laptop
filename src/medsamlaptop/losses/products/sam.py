@@ -6,6 +6,7 @@ class SAMLoss(torch.nn.Module):
                  , seg_loss_weight: float
                  , ce_loss_weight: float
                  , iou_loss_weight: float) -> None:
+        super(SAMLoss, self).__init__()
         self.seg_loss = monai.losses.DiceLoss(sigmoid=True, squared_pred=True, reduction='mean')
         self.ce_loss = torch.nn.BCEWithLogitsLoss(reduction='mean')
         self.iou_loss = torch.nn.MSELoss(reduction='mean')
