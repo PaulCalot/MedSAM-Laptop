@@ -1,1 +1,4 @@
-from .medsam import SamTrainer
+from .factories import (
+    TrainerFactoryInterface
+    , SamTrainerFactory
+)
