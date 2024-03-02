@@ -3,8 +3,8 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 from ..models import ModelFactoryInterface
 from ..models.products import SegmentAnythingModelInterface
-from ..data import DatasetFactoryInterface
-from ..data.products import DatasetInterface
+from ..datasets import DatasetFactoryInterface
+from ..datasets.products import DatasetInterface
 # TODO: add type for optimizer, etc.
 from ..utils.checkpoint import Checkpoint
 from .meta_factory import MetaFactory
@@ -14,6 +14,7 @@ class TrainSegmentAnythingPipeFacade:
                  , meta_factory: MetaFactory) -> None:
         self.model: SegmentAnythingModelInterface = meta_factory.create_model()
         self.dataset: DatasetInterface = meta_factory.create_dataset()
+        self.dataloader: DataLoader = meta_factory.create_dataloader(self.dataset)
         self.optimizer = meta_factory.create_optimizer(self.model)
         self.scheduler = meta_factory.create_scheduler(self.optimizer)
         self.loss = meta_factory.create_loss()
@@ -29,13 +30,12 @@ class TrainSegmentAnythingPipeFacade:
         self.optimizer.load_state_dict(checkpoint.optimizer_state)
 
     def train(self
-              , train_loader: DataLoader
               , saving_dir: pathlib.Path
               , num_epochs: int
               , start_epoch: int
               , best_loss: float):
         self.trainer.train(
-            train_loader
+            self.dataloader
             , saving_dir
             , num_epochs
             , start_epoch

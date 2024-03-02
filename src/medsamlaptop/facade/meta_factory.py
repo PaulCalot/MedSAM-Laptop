@@ -1,9 +1,13 @@
 import torch
 import pathlib
 from typing import Dict
-
+from torch.utils.data import (
+    Dataset
+    , DataLoader
+)
 # TODO: redo imports
-from medsamlaptop import data as medsamlaptop_data
+from medsamlaptop import datasets as medsamlaptop_datasets
+from medsamlaptop import dataloaders as medsamlaptop_dataloaders
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop import losses as medsamlaptop_losses
 from medsamlaptop import schedulers as medsamlaptop_schedulers
@@ -11,7 +15,7 @@ from medsamlaptop import optimizers as medsamlaptop_optimizers
 from medsamlaptop import trainers as medsamlaptop_trainers
 from medsamlaptop import constants
 from medsamlaptop.trainers.products.interface import BaseTrainer
-from medsamlaptop.data.products.interface import DatasetInterface
+from medsamlaptop.datasets.products.interface import DatasetInterface
 from medsamlaptop.models.products.interface import SegmentAnythingModelInterface
 
 # TODO: Replace dictionnary by something better that involves setting the factory types explicitely
@@ -30,6 +34,7 @@ class MetaFactory:
                  , weight_decay: float
                  , device: torch.device
                  , kwargs_loss: Dict
+                 , kwargs_dataloaders: Dict
                  , pretrained_checkpoint: pathlib.Path) -> None:
         assert (run_type, model_type) in self.AVAILABLE_BUILDS, f"Build type not implemented: {(run_type, model_type)} - authorized: {self.AVAILABLE_BUILDS}"
         self.build_type = (run_type, model_type)
@@ -42,6 +47,7 @@ class MetaFactory:
         self.data_root = data_root
         self.device = device
         self.kwargs_loss = kwargs_loss
+        self.kwargs_dataloaders = kwargs_dataloaders
         self.pretrained_checkpoint = pretrained_checkpoint
     
         # init factories
@@ -52,7 +58,8 @@ class MetaFactory:
             case (constants.TRAIN_RUN_TYPE, constants.EDGE_SAM_NAME):
                 return {
                     "model": medsamlaptop_models.MedEdgeSAMFactory()
-                    , "dataset": medsamlaptop_data.Npy1024Factory(self.data_root)
+                    , "dataset": medsamlaptop_datasets.Npy1024Factory(self.data_root)
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
                     , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
                     , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()
                     , "loss": medsamlaptop_losses.SamLossFactory(**self.kwargs_loss)
@@ -61,7 +68,8 @@ class MetaFactory:
             case (constants.TRAIN_RUN_TYPE, constants.MED_SAM_LITE_NAME):
                 return {
                     "model": medsamlaptop_models.MedSAMLiteFactory()
-                    , "dataset": medsamlaptop_data.Npy256Factory(self.data_root)
+                    , "dataset": medsamlaptop_datasets.Npy256Factory(self.data_root)
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
                     , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
                     , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()
                     , "loss": medsamlaptop_losses.SamLossFactory(**self.kwargs_loss)
@@ -70,7 +78,8 @@ class MetaFactory:
             case (constants.TRAIN_RUN_TYPE, constants.MED_SAM_NAME):
                 return {
                     "model": medsamlaptop_models.MedSAMFactory()
-                    , "dataset": medsamlaptop_data.Npy1024Factory(self.data_root)
+                    , "dataset": medsamlaptop_datasets.Npy1024Factory(self.data_root)
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
                     , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
                     , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()
                     , "loss": medsamlaptop_losses.SamLossFactory(**self.kwargs_loss)
@@ -79,7 +88,8 @@ class MetaFactory:
             case (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME):
                 return {
                     "model": medsamlaptop_models.MedEdgeSAMFactory()
-                    , "dataset": medsamlaptop_data.Distillation1024Factory(self.data_root)
+                    , "dataset": medsamlaptop_datasets.Distillation1024Factory(self.data_root)
+                    , "dataloader": None # TODO
                     , "optimizer": None # TODO
                     , "scheduler": None # TODO                
                     , "loss": None # TODO
@@ -100,6 +110,9 @@ class MetaFactory:
 
     def create_dataset(self) -> DatasetInterface:
         return self.factories["dataset"].create_dataset()
+    
+    def create_dataloader(self, dataset: Dataset) -> DataLoader:
+        return self.factories["dataloader"].create_dataloader(dataset)
     
     def create_optimizer(self, model: torch.nn.Module) -> torch.optim.Optimizer:
         return self.factories["optimizer"].create_optimizer(model)
