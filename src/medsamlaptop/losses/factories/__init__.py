@@ -1,2 +1,3 @@
 from .interface import LossFactoryInterface
 from .sam import SamLossFactory
+from .encoder_distillation import EncoderDistillationLossFactory
