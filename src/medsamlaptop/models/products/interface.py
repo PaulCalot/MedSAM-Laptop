@@ -5,13 +5,22 @@ class SegmentAnythingModelInterface(torch.nn.Module, abc.ABC):
     def __init__(self):
         super(SegmentAnythingModelInterface, self).__init__()
     
-    abc.abstractmethod
+    @abc.abstractmethod
     def forward(self):
         pass
 
+    @abc.abstractmethod
     @torch.no_grad()
     def postprocess_masks(self, masks, new_size, original_size):
         """
         Must return the masks
         """
+        pass
+
+    @abc.abstractmethod
+    def get_encoder(self) -> torch.nn.Module:
+        pass
+
+    @abc.abstractmethod
+    def freeze_prompt_encoder(self):
         pass

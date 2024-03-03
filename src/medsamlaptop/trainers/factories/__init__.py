@@ -1,2 +1,4 @@
 from .interface import TrainerFactoryInterface
 from .sam import SamTrainerFactory
+from .encoder import EncoderDistillerFactory
+from .edgesam_stage2_distillation import EdgeSamStage2DistillationFactory

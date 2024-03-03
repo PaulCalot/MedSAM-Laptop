@@ -26,25 +26,70 @@ export USERCFG="/home/camerone/Documents/repertoires/user.cfg"
 Replace with your own path.
 
 ## Use
+Replace with your own path, relatively to the path used in the *user.cfg*, for the pretrained checkpoint and root of the data npy files.
+
+### Training
 ```shell
 python scripts/train_one_gpu.py \
-    -data_root FLARE22Train/data/npy/CT_Abd/ \
-    -pretrained_checkpoint little-med-sam/lite_medsam.pth \
-    -work_dir DEV \
-    -num_workers 4 \
-    -batch_size 4 \
-    -num_epochs 10 \
-    -device cuda:0 \
-    -model_type medSAMLite
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint little-med-sam/lite_medsam.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type medSAMLite \
+    --run_type train
 
 python scripts/train_one_gpu.py \
-    -data_root FLARE22Train/data/npy/CT_Abd/ \
-    -pretrained_checkpoint edge-sam/edge_sam_3x.pth \
-    -work_dir DEV \
-    -num_workers 4 \
-    -batch_size 4 \
-    -num_epochs 10 \
-    -device cuda:0 \
-    -model_type edgeSAM
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint edge-sam/edge_sam_3x.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type edgeSAM \
+    --run_type train
+
+python scripts/train_one_gpu.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint edge-sam/edge_sam_3x.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type edgeSAM \
+    --run_type encoder-distillation
+
+python scripts/train_one_gpu.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint edge-sam/edge_sam_3x.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type edgeSAM \
+    --run_type edgeSAM-stage2-distillation
 ```
-Replace with your own path, relatively to the path used in the *user.cfg*, for the pretrained checkpoint and root of the data npy files.
+
+### Teacher inference
+This should be called before doing a distillation. For edgeSAM first-stage distillation (encoder only), use `run_type` at `encoder-inference`. For edgeSAM second-stage distillation (full distillation, frozen prompt encoder), use `full-inference`.
+
+```shell
+python scripts/teacher_inference.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint med-sam/medsam_vit_b.pth \
+    --model_type MedSAM \
+    --device cuda:0
+    --run_type encoder-inference
+
+python scripts/teacher_inference.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint med-sam/medsam_vit_b.pth \
+    --model_type MedSAM \
+    --device cuda:0
+    --run_type full-inference
+```

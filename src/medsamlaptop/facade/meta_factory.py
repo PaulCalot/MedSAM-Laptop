@@ -25,6 +25,7 @@ class MetaFactory:
         , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_LITE_NAME)
         , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_NAME)
         , (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME)
+        , (constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME)
     )
     def __init__(self
                  , run_type: str
@@ -89,23 +90,41 @@ class MetaFactory:
                 return {
                     "model": medsamlaptop_models.MedEdgeSAMFactory()
                     , "dataset": medsamlaptop_datasets.Distillation1024Factory(self.data_root)
-                    , "dataloader": None # TODO
-                    , "optimizer": None # TODO
-                    , "scheduler": None # TODO                
-                    , "loss": None # TODO
-                    , "trainer": None # TODO
+                    # NOTE: for now same as Sam
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
+                    , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
+                    , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()          
+                    , "loss": medsamlaptop_losses.EncoderDistillationLossFactory()
+                    , "trainer": medsamlaptop_trainers.EncoderDistillerFactory(self.device) # TODO
+                }
+            case (constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME):
+                return {
+                    "model": medsamlaptop_models.MedEdgeSAMFactory()
+                    , "dataset": medsamlaptop_datasets.Stage2Distillation1024Factory(self.data_root)
+                    # NOTE: for now same as Sam
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
+                    , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
+                    , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()          
+                    , "loss": medsamlaptop_losses.EdgeSamStage2LossFactory(seg_loss_weight=0.5, ce_loss_weight=0.5) # TODO: weights should be set outside
+                    , "trainer": medsamlaptop_trainers.EdgeSamStage2DistillationFactory(self.device) # TODO
                 }
             case _:
                 raise NotImplementedError(f"Build type {self.build_type} not implemented")
 
-    def create_model(self) -> SegmentAnythingModelInterface:
+    def create_model(self) -> torch.nn.Module:
         # NOTE: we add here the load of the checkpoint
         # however, if in the future it should be different between models
         # then it is important to do it at the ModelFactory model
         # which is sensible
-        model = self.factories["model"].create_model()
+        model: SegmentAnythingModelInterface = self.factories["model"].create_model()
         if(self.pretrained_checkpoint.is_file()):
             return self.load_model_checkpoint_from_path(model)
+
+        # TODO: may be this is not the best thing...
+        if(self.run_type == constants.ENCODER_DISTILLATION_RUN_TYPE):
+            return model.get_encoder()
+        elif(self.run_type == constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE):
+            model.freeze_prompt_encoder()
         return model
 
     def create_dataset(self) -> DatasetInterface:
