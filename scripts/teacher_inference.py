@@ -12,11 +12,12 @@ import numpy as np
 import tqdm
 
 # local packages
+from medsamlaptop import constants
 from medsamlaptop import facade as medsamlaptop_facade
 from medsamlaptop import models as medsamlaptop_models
 from medsamlaptop.models.products.interface import SegmentAnythingModelInterface
-from medsamlaptop.data.products.npy import NpyDataset # this is a concrete class
-from medsamlaptop import data as medsamlaptop_datasets
+from medsamlaptop.datasets.products.npy import NpyDataset # this is a concrete class
+from medsamlaptop import datasets as medsamlaptop_datasets
 from medsamtools import user
 
 parser = argparse.ArgumentParser()
@@ -29,9 +30,14 @@ parser.add_argument(
     help="Path to the pretrained checkpoint."
 )
 parser.add_argument(
-    "--model_type", default="MedSAM",
-    help="Type of backbone model : MedSAM. Default: MedSAM",
-    choices=["MedSAM"]
+    "--model_type", default=constants.MED_SAM_NAME,
+    help="Type of backbone model.",
+    choices=[constants.MED_SAM_NAME]
+)
+parser.add_argument(
+    "--run_type", default=constants.FULL_INFERENCE_RUN_TYPE,
+    help="Type of inference run.",
+    choices=[constants.FULL_INFERENCE_RUN_TYPE, constants.ENCODER_INFERENCE_RUN_TYPE]
 )
 parser.add_argument(
     "--device", type=str, default="cuda:0",
@@ -40,7 +46,9 @@ parser.add_argument(
 
 args = parser.parse_args()
 args.data_root = user.get_path_to_data() / args.data_root
-args.output_dir = args.data_root / "encoder_gts"
+# TODO: make it better, here we suppose that a mistake is still a teacher_gts...
+name_folder = "encoder_gts" if args.run_type == constants.ENCODER_INFERENCE_RUN_TYPE else "teacher_gts"
+args.output_dir = args.data_root / name_folder
 args.output_dir.mkdir(exist_ok=True, parents=True)
 args.pretrained_checkpoint = user.get_path_to_pretrained_models() / args.pretrained_checkpoint
 
@@ -80,7 +88,17 @@ with torch.no_grad():
         output = dataset[i]
         img_tensor = output["image"].to(args.device)
         name = output["image_name"]
-        image_embedding = model.image_encoder(torch.unsqueeze(img_tensor, 0))  # output: (1, 256, 64, 64)
-        image_embedding = image_embedding.cpu().numpy()
-        np.save(args.output_dir / name # name already contains .npy
-                , image_embedding)
+        if(args.run_type == constants.ENCODER_INFERENCE_RUN_TYPE):
+            image_embedding = model.image_encoder(torch.unsqueeze(img_tensor, 0))  # output: (1, 256, 64, 64)
+            image_embedding = image_embedding.cpu().numpy()
+            np.save(args.output_dir / name # name already contains .npy
+                    , image_embedding)
+        elif(args.run_type == constants.FULL_INFERENCE_RUN_TYPE):
+            # Requires more input
+            boxes = output["bboxes"].to(args.device)
+            (masks, iou_predictions) = model(torch.unsqueeze(img_tensor, 0)
+                                             , torch.unsqueeze(boxes, 0))
+            masks = masks.cpu().numpy()
+            np.save(args.output_dir / name
+                    , masks)
+
