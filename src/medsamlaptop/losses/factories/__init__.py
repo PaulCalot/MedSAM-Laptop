@@ -1,3 +1,4 @@
 from .interface import LossFactoryInterface
 from .sam import SamLossFactory
 from .encoder_distillation import EncoderDistillationLossFactory
+from .edgesam_stage2_loss import EdgeSamStage2Loss
