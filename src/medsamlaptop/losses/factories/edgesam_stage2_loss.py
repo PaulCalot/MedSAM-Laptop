@@ -1,7 +1,7 @@
 from ..products.edgesam_stage2_loss import EdgeSamStage2Loss 
 from .interface import LossFactoryInterface
 
-class EncoderDistillationLossFactory(LossFactoryInterface):
+class EdgeSamStage2LossFactory(LossFactoryInterface):
     def __init__(self
                  , seg_loss_weight: float
                  , ce_loss_weight: float) -> None:
