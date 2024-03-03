@@ -189,8 +189,14 @@ class MedSAM(SegmentAnythingModelInterface):
         h, w = x.shape[-2:]
         padh = self.image_encoder.img_size - h
         padw = self.image_encoder.img_size - w
-        x = F.pad(x, (0, padw, 0, padh))
+        x = torch.nn.functional.pad(x, (0, padw, 0, padh))
         return x
 
     def get_encoder(self):
-      return self.image_encoder
+        return self.image_encoder
+
+    def freeze_prompt_encoder(self):
+        # NOTE: we do it this way
+        # but may be we should tell prompt encoder to do it for itself
+        for param in self.prompt_encoder.parameters():
+            param.requires_grad = False

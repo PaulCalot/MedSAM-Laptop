@@ -20,3 +20,7 @@ class SegmentAnythingModelInterface(torch.nn.Module, abc.ABC):
     @abc.abstractmethod
     def get_encoder(self) -> torch.nn.Module:
         pass
+
+    @abc.abstractmethod
+    def freeze_prompt_encoder(self):
+        pass
