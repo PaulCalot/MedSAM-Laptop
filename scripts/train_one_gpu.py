@@ -85,7 +85,9 @@ parser.add_argument(
 parser.add_argument(
     "--run_type", default=constants.TRAIN_RUN_TYPE,
     help="Type of run",
-    choices=[constants.ENCODER_DISTILLATION_RUN_TYPE, constants.TRAIN_RUN_TYPE]
+    choices=[constants.ENCODER_DISTILLATION_RUN_TYPE
+             , constants.TRAIN_RUN_TYPE
+             , constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE]
 )
 args = parser.parse_args()
 args.work_dir = user.get_path_to_results() / args.work_dir
