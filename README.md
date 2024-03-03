@@ -62,6 +62,17 @@ python scripts/train_one_gpu.py \
     --device cuda:0 \
     --model_type edgeSAM \
     --run_type encoder-distillation
+
+python scripts/train_one_gpu.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint edge-sam/edge_sam_3x.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type edgeSAM \
+    --run_type edgeSAM-stage2-distillation
 ```
 
 ### Teacher inference
