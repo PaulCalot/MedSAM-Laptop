@@ -26,6 +26,9 @@ export USERCFG="/home/camerone/Documents/repertoires/user.cfg"
 Replace with your own path.
 
 ## Use
+Replace with your own path, relatively to the path used in the *user.cfg*, for the pretrained checkpoint and root of the data npy files.
+
+### Training
 ```shell
 python scripts/train_one_gpu.py \
     --data_root FLARE22Train/data/npy/CT_Abd/ \
@@ -60,4 +63,22 @@ python scripts/train_one_gpu.py \
     --model_type edgeSAM \
     --run_type encoder-distillation
 ```
-Replace with your own path, relatively to the path used in the *user.cfg*, for the pretrained checkpoint and root of the data npy files.
+
+### Teacher inference
+This should be called before doing a distillation. For edgeSAM first-stage distillation (encoder only), use `run_type` at `encoder-inference`. For edgeSAM second-stage distillation (full distillation, frozen prompt encoder), use `full-inference`.
+
+```shell
+python scripts/teacher_inference.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint med-sam/medsam_vit_b.pth \
+    --model_type MedSAM \
+    --device cuda:0
+    --run_type encoder-inference
+
+python scripts/teacher_inference.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint med-sam/medsam_vit_b.pth \
+    --model_type MedSAM \
+    --device cuda:0
+    --run_type full-inference
+```
