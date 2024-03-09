@@ -2,4 +2,5 @@ from .interface import DatasetFactoryInterface
 from .npy_res1024 import Npy1024Factory
 from .npy_res256 import Npy256Factory
 from .distillation_res1024 import Distillation1024Factory
+from .distillation_res256 import Distillation256Factory
 from .distillation_stage2_res1024 import Stage2Distillation1024Factory

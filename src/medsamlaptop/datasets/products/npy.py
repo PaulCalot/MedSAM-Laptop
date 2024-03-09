@@ -19,6 +19,10 @@ class NpyDataset(DatasetInterface):
         self.gt_path = data_root / 'gts'
         self.img_path = data_root / 'imgs'
         self.gt_path_files = sorted(self.gt_path.rglob("*.npy"))
+        # TODO: here we should, instead of doing that, load a path that contains all the images we want to load,
+        # as a json file or something - the signature would not change, but we would load a file that would contain a given number
+        # of images, each related to a certain directory
+        # this "dataset"
         self.gt_path_files = [
             file for file in self.gt_path_files
             if os.path.isfile(os.path.join(self.img_path, os.path.basename(file)))
