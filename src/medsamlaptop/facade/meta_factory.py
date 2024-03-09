@@ -25,6 +25,7 @@ class MetaFactory:
         , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_LITE_NAME)
         , (constants.TRAIN_RUN_TYPE, constants.MED_SAM_NAME)
         , (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME)
+        , (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.MED_SAM_LITE_NAME)
         , (constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME)
     )
     def __init__(self
@@ -97,6 +98,16 @@ class MetaFactory:
                     , "loss": medsamlaptop_losses.EncoderDistillationLossFactory()
                     , "trainer": medsamlaptop_trainers.EncoderDistillerFactory(self.device) # TODO
                 }
+            case (constants.ENCODER_DISTILLATION_RUN_TYPE, constants.MED_SAM_LITE_NAME):
+                return {
+                    "model": medsamlaptop_models.MedSAMLiteFactory()
+                    , "dataset": medsamlaptop_datasets.Distillation256Factory(self.data_root)
+                    , "dataloader": medsamlaptop_dataloaders.SamDataloaderFactory(**self.kwargs_dataloaders)
+                    , "optimizer": medsamlaptop_optimizers.SamOptimizerFactory(self.lr, self.weight_decay)
+                    , "scheduler": medsamlaptop_schedulers.SamSchedulerFactory()          
+                    , "loss": medsamlaptop_losses.EncoderDistillationLossFactory()
+                    , "trainer": medsamlaptop_trainers.EncoderDistillerFactory(self.device) # TODO
+                }
             case (constants.EDGE_SAM_STAGE_2_DISTILLATION_RUN_TYPE, constants.EDGE_SAM_NAME):
                 return {
                     "model": medsamlaptop_models.MedEdgeSAMFactory()
@@ -118,7 +129,7 @@ class MetaFactory:
         # which is sensible
         model: SegmentAnythingModelInterface = self.factories["model"].create_model()
         if(self.pretrained_checkpoint.is_file()):
-            return self.load_model_checkpoint_from_path(model)
+            self.load_model_checkpoint_from_path(model)
 
         # TODO: may be this is not the best thing...
         if(self.run_type == constants.ENCODER_DISTILLATION_RUN_TYPE):
@@ -161,7 +172,7 @@ class MetaFactory:
                 self.pretrained_checkpoint,
                 map_location="cpu"
         )
-        return self.load_model_checkpoint(model, checkpoint)
+        self.load_model_checkpoint(model, checkpoint)
 
     def load_model_checkpoint(self, model: torch.nn.Module, checkpoint):
-        return model.load_state_dict(checkpoint, strict=True)
+        model.load_state_dict(checkpoint, strict=True)
