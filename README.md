@@ -65,6 +65,17 @@ python scripts/train_one_gpu.py \
 
 python scripts/train_one_gpu.py \
     --data_root FLARE22Train/data/npy/CT_Abd/ \
+    --pretrained_checkpoint little-med-sam/lite_medsam.pth \
+    --work_dir DEV \
+    --num_workers 4 \
+    --batch_size 4 \
+    --num_epochs 10 \
+    --device cuda:0 \
+    --model_type medSAMLite \
+    --run_type encoder-distillation
+
+python scripts/train_one_gpu.py \
+    --data_root FLARE22Train/data/npy/CT_Abd/ \
     --pretrained_checkpoint edge-sam/edge_sam_3x.pth \
     --work_dir DEV \
     --num_workers 4 \
