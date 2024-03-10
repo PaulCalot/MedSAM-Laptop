@@ -1,4 +1,6 @@
 import abc
+import torch
+import numpy as np
 import tqdm
 import pathlib
 
@@ -28,11 +30,13 @@ class BaseTrainer(abc.ABC):
 
     def train(self
               , train_loader
+              , valid_loader
               , saving_dir: pathlib.Path
               , num_epochs: int
               , start_epoch: int =0
               , best_loss: float=1e10):
         train_losses = []
+        eval_loss = best_loss
         for epoch in range(start_epoch + 1, num_epochs + 1):
             epoch_loss = []
             pbar = tqdm.tqdm(train_loader, desc=f"Epoch {epoch}")
@@ -45,15 +49,27 @@ class BaseTrainer(abc.ABC):
                 self.optimizer.step()
 
                 epoch_loss.append(loss.item())
-                pbar.set_description(f"Epoch {epoch} Loss: {loss.item():.4f}")
+                pbar.set_description(f"Epoch {epoch} Loss: {loss.item():.4f} - Valid: {eval_loss:.4f} - Best: {best_loss:.4f}")
+
+            # End of the epoch, compute validation loss
+            with torch.no_grad():
+                self.model.eval()
+                eval_loss_list = []
+                for batch in valid_loader:
+                    data, targets = self.handle_batch(batch)
+                    outputs = self.model(*data)
+                    loss = self.compute_loss(outputs, targets)
+                    eval_loss_list.append(loss.cpu())
+                eval_loss = np.mean(eval_loss_list)
+                self.model.train()
 
             avg_epoch_loss = sum(epoch_loss) / len(epoch_loss)
             train_losses.append(avg_epoch_loss)
             self.lr_scheduler.step(avg_epoch_loss)
 
-            is_best = avg_epoch_loss < best_loss
-            best_loss = min(avg_epoch_loss, best_loss)
-            self._save_checkpoint(epoch, saving_dir, avg_epoch_loss, is_best)
+            is_best = eval_loss < best_loss
+            best_loss = min(eval_loss, best_loss)
+            self._save_checkpoint(epoch, saving_dir, eval_loss, is_best)
 
         plot_and_save_loss(train_losses, saving_dir)
 
