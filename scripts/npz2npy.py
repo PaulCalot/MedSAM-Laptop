@@ -42,7 +42,7 @@ def pad_image(image, target_length=256):
     
     return image_padded
 
-
+do_resize_256 = False
 def convert_npz_to_npy(input_):
     """
     Convert npz files to npy files for training
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     # npz_dir = "train_npz"
     # npy_dir = "train_npy"
     num_workers = 8
-    do_resize_256 = False # whether to resize images and masks to 256x256
+    # do_resize_256 = False # whether to resize images and masks to 256x256
     # makedirs(npy_dir, exist_ok=True)
     # makedirs(join(npy_dir, "imgs"), exist_ok=True)
     # makedirs(join(npy_dir, "gts"), exist_ok=True)
