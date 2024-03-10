@@ -1,22 +1,33 @@
 import numpy as np
+import pathlib
 import random
 import cv2
 import torch
 import os
+import json
 from .interface import DatasetInterface
+from .fetcher import JsonDataParser
 
 class EncoderDistillationDataset(DatasetInterface): 
+    required_entities = ["encoder_gts", "imgs"]
+
     def __init__(self
-                 , data_root
+                 , path_to_json: pathlib.Path
+                 , data_root: pathlib.Path
                  , image_size=256):
+        assert(path_to_json.is_file())
+        with open(path_to_json, "r") as f:
+            json_data = json.load(f)
+
         self.data_root = data_root
-        self.gt_path = data_root / 'encoder_gts'
-        self.img_path = data_root / 'imgs'
-        self.gt_path_files = sorted(self.gt_path.rglob("*.npy"))
-        self.gt_path_files = [
-            file for file in self.gt_path_files
-            if os.path.isfile(os.path.join(self.img_path, os.path.basename(file)))
-        ]
+        self.json_parser = JsonDataParser(json_data, data_root)
+        self.paths = self.json_parser.get_paths(self.required_entities)
+
+        # self.gt_path = data_root / 'encoder_gts'
+        # self.img_path = data_root / 'imgs'
+        # self.gt_path_files = sorted(self.gt_path.rglob("*.npy"))
+        self.gt_path_files = [ dico["encoder_gts"] for dico in self.paths.values()]
+        self.img_path_files = [ dico["imgs"] for dico in self.paths.values()]
         self.image_size = image_size
         self.target_length = image_size
 
@@ -26,7 +37,7 @@ class EncoderDistillationDataset(DatasetInterface):
     def __getitem__(self, index):
         img_name = os.path.basename(self.gt_path_files[index])
         assert img_name == os.path.basename(self.gt_path_files[index]), 'img gt name error' + self.gt_path_files[index] + self.npy_files[index]
-        img_3c = np.load(os.path.join(self.img_path, img_name), 'r', allow_pickle=True) # (H, W, 3)
+        img_3c = np.load(self.img_path_files[index]) # os.path.join(self.img_path, img_name), 'r', allow_pickle=True) # (H, W, 3)
         # TODO: make it much better, this is only very quick fix (this is dumb)
         img_resize = self.resize_longest_side(img_3c, long_side_length=self.target_length)
         # Resizing
