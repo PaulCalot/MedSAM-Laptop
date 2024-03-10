@@ -1,6 +1,6 @@
 import torch
 import pathlib
-from typing import Dict
+from typing import Dict, Tuple
 from torch.utils.data import (
     Dataset
     , DataLoader
@@ -138,8 +138,12 @@ class MetaFactory:
             model.freeze_prompt_encoder()
         return model
 
-    def create_dataset(self) -> DatasetInterface:
-        return self.factories["dataset"].create_dataset()
+    def create_datasets(self) -> Tuple[DatasetInterface, DatasetInterface]:
+        dataset = self.factories["dataset"].create_dataset()
+        train_set, valid_set = torch.utils.data.random_split(dataset
+                                      , [0.8, 0.2]
+                                      , generator=torch.Generator().manual_seed(42))
+        return (train_set, valid_set)
     
     def create_dataloader(self, dataset: Dataset) -> DataLoader:
         return self.factories["dataloader"].create_dataloader(dataset)

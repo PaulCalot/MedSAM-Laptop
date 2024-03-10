@@ -8,13 +8,15 @@ from ..datasets.products import DatasetInterface
 # TODO: add type for optimizer, etc.
 from ..utils.checkpoint import Checkpoint
 from .meta_factory import MetaFactory
+from typing import Tuple
 
 class TrainSegmentAnythingPipeFacade:
     def __init__(self
                  , meta_factory: MetaFactory) -> None:
         self.model: SegmentAnythingModelInterface = meta_factory.create_model()
-        self.dataset: DatasetInterface = meta_factory.create_dataset()
-        self.dataloader: DataLoader = meta_factory.create_dataloader(self.dataset)
+        (self.train_set, self.valid_set) = meta_factory.create_datasets()
+        self.train_dataloader: DataLoader = meta_factory.create_dataloader(self.train_set)
+        self.valid_dataloader: DataLoader = meta_factory.create_dataloader(self.valid_set)
         self.optimizer = meta_factory.create_optimizer(self.model)
         self.scheduler = meta_factory.create_scheduler(self.optimizer)
         self.loss = meta_factory.create_loss()
@@ -29,7 +31,8 @@ class TrainSegmentAnythingPipeFacade:
         representation_parts = [
                 "Training parameters:\n\t"
                 , f"\tModel:{str(self.model.__class__)}"
-                , f"\tDataset:{str(self.dataset)}"
+                , f"\tTrain Dataset:{str(self.train_set)}"
+                , f"\tValid Dataset:{str(self.valid_set)}"
                 , f"\tOptimizer:{str(self.optimizer)}"
                 , f"\tScheduler:{str(self.scheduler)}"
                 , f"\tLoss:{str(self.loss)}"
@@ -47,7 +50,8 @@ class TrainSegmentAnythingPipeFacade:
               , start_epoch: int
               , best_loss: float):
         self.trainer.train(
-            self.dataloader
+            self.train_dataloader
+            , self.valid_dataloader
             , saving_dir
             , num_epochs
             , start_epoch
