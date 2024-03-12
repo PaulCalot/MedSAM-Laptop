@@ -67,7 +67,9 @@ os.environ["NUMEXPR_NUM_THREADS"] = "6" # export NUMEXPR_NUM_THREADS=6
 if(args.model_type=="MedSAM"):
     model_factory: medsamlaptop_models.ModelFactoryInterface = medsamlaptop_models.MedSAMFactory()
     dataset_factory: medsamlaptop_datasets.DatasetFactoryInterface = medsamlaptop_datasets.Npy1024Factory(args.data_root)
-
+else:
+    print(f"{args.model_type} not implemented.")
+    sys.exit(1)
 facade = medsamlaptop_facade.InferSegmentAnythingPipeFacade(
                 model_factory
                 , dataset_factory)
