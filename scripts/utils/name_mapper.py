@@ -64,6 +64,10 @@ class NameMapper:
         self._save()
         assert self.df_mapper["id"].nunique() == len(self.df_mapper), "ID is not unique (Race condition ?)"
 
+    # def iterate(self):
+    #     for index, rows in self.df_mapper.itterows():
+    #         old_name, dataset, new_name =  
+
 def get_handler(dataset):
     dataset_to_authorized_pattern = {
         "hc18": handle_hc18

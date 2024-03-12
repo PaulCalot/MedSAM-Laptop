@@ -65,6 +65,10 @@ def convert_npz_to_npy(input_):
         gts_root_saving_dir.mkdir(parents=True, exist_ok=True)
         if len(gts.shape) > 2: ## 3D image
             for i in range(imgs.shape[0]):
+                new_name_img = img_root_saving_dir / f"{new_name}_{i:03d}.npy"
+                new_name_gts = gts_root_saving_dir / f"{new_name}_{i:03d}.npy"
+                if(new_name_img.is_file() and new_name_gts.is_file()):
+                    continue 
                 img_i = imgs[i, :, :]
                 gt_i = gts[i, :, :]
                 if do_resize_256:
@@ -84,9 +88,13 @@ def convert_npz_to_npy(input_):
                 gt_i = np.uint8(gt_i)
                 assert img_01.shape[:2] == gt_i.shape
 
-                np.save(img_root_saving_dir / f"{new_name}_{i:03d}.npy", img_01)
-                np.save(gts_root_saving_dir / f"{new_name}_{i:03d}.npy", gt_i)
+                np.save(new_name_img, img_01)
+                np.save(new_name_gts, gt_i)
         else: ## 2D image
+            new_name_img = img_root_saving_dir / f"{new_name}.npy"
+            new_name_gts = gts_root_saving_dir / f"{new_name}.npy"
+            if(new_name_img.is_file() and new_name_gts.is_file()):
+                return
             if len(imgs.shape) < 3:
                 img_3c = np.repeat(imgs[:, :, None], 3, axis=-1)
             else:
@@ -103,8 +111,8 @@ def convert_npz_to_npy(input_):
                 img_3c.max() - img_3c.min(), a_min=1e-8, a_max=None
             )  # normalize to [0, 1], (H, W, 3)
             assert img_01.shape[:2] == gts.shape
-            np.save(img_root_saving_dir / f"{new_name}.npy", img_01)
-            np.save(gts_root_saving_dir / f"{new_name}.npy", gts)
+            np.save(new_name_img, img_01)
+            np.save(new_name_gts, gts)
             # np.save(join(npy_dir, "imgs", name + ".npy"), img_01)
             # np.save(join(npy_dir, "gts", name + ".npy"), gts)
     except Exception as e:
@@ -189,12 +197,12 @@ if __name__ == "__main__":
                     print(f"[{k}] FAIL: {name_dataset} - {path_.stem} (reason: {dico})")
                 else:
                     new_name = mapper.get_new_name(**dico)
-                inputs.append( # npz_path, npy_root_path, new_name
-                    (path_, root_saving_directory / name_dataset, new_name)
-                )
+                    inputs.append( # npz_path, npy_root_path, new_name
+                        (path_, root_saving_directory / name_dataset, new_name)
+                    )
     # npz_dir = "train_npz"
     # npy_dir = "train_npy"
-    num_workers = 8
+    num_workers = 4
     # do_resize_256 = False # whether to resize images and masks to 256x256
     # makedirs(npy_dir, exist_ok=True)
     # makedirs(join(npy_dir, "imgs"), exist_ok=True)
