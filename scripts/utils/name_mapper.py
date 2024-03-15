@@ -100,7 +100,36 @@ dataset_to_authorized_pattern = {
     , "CT_AbdTumor": [r"CT_AbdTumor_(?P<ORGAN>[a-zA-Z]+)_(?P<ID>[a-zA-Z0-9]+)"]
     , "AbdomenCT1K": [r"CT_AbdomenCT_Case_(?P<ID>[0-9]{5})"]
     , "AMOD": [r"CT_AMOS_amos_(?P<ID>[0-9]{4})"]
+    , "ISIC2018": [r"Dermoscopy_ISIC2018_ISIC_(?P<ID>[0-9]{7})"]
+    , "IDRiD": 
 }
+#     , "ISIC2018": "Dermoscopy/ISIC2018"
+#     , "IDRiD": "Fundus/IDRiD"
+#     , "PAPILA": "Fundus/PAPILA"
+#     , "CDD-CESM": "Mammography/CDD-CESM"
+#     , "AMOSMR": "MR/AMOSMR"
+#     , "BraTS_FLAIR": "MR/BraTS_FLAIR"
+#     , "BraTS_T1": "MR/BraTS_T1"
+#     , "BraTS_T1CE": "MR/BraTS_T1CE"
+#     , "CervicalCancer": "MR/CervicalCancer"
+#     , "crossmoda": "MR/crossmoda"
+#     , "Heart": "MR/Heart"
+#     , "ISLES2022_ADC": "MR/ISLES2022_ADC"
+#     , "ISLES2022_DWI": "MR/ISLES2022_DWI"
+#     , "ProstateADC": "MR/ProstateADC"
+#     , "ProstateT2": "MR/ProstateT2"
+#     , "QIN-PROSTATE-Lesion": "MR/QIN-PROSTATE-Lesion"
+#     , "QIN-PROSTATE-Prostate": "MR/QIN-PROSTATE-Prostate"
+#     , "SpineMR": "MR/SpineMR"
+#     , "WMH_FLAIR": "MR/WMH_FLAIR"
+#     , "WMH_T1": "MR/WMH_T1"
+#     , "Chest-Xray-Masks-and-Labels": "XRay/Chest-Xray-Masks-and-Labels"
+#     , "COVID-19-Radiography-Database": "XRay/COVID-19-Radiography-Database"
+#     , "COVID-QU-Ex-lungMask_CovidInfection": "XRay/COVID-QU-Ex-lungMask_CovidInfection"
+#     , "COVID-QU-Ex-lungMask_Lung": "XRay/COVID-QU-Ex-lungMask_Lung"
+#     , "Pneumothorax-Masks": "XRay/Pneumothorax-Masks"
+# }
+
 
 def handle_amod(name: str):
     patterns = dataset_to_authorized_pattern["AMOD"]

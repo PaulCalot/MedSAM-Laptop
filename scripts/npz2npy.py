@@ -1,11 +1,11 @@
-import glob
-from os import makedirs
 from os.path import join, basename
 from tqdm import tqdm
 import numpy as np
 import cv2
 import multiprocessing as mp
 from tqdm import tqdm
+import argparse
+import random
 
 from medsamtools import user
 from utils.name_mapper import (
@@ -131,8 +131,6 @@ def convert_npz_to_npy(input_):
 # There should be some way to make sure this is repeatalbe (that is id are unique throughout each system)
 # what would it allow us to do, that to have unique ID ?
 
-# modality id : 4 0-9
-
 datasets_paths = {
     "hc18": "US/hc18"
     , "Breast-Ultrasound": "US/Breast-Ultrasound"
@@ -145,6 +143,31 @@ datasets_paths = {
     , "CT_AbdTumor": "CT/CT_AbdTumor"
     , "AbdomenCT1K": "CT/AbdomenCT1K"
     , "AMOD": "CT/AMOS"
+    , "ISIC2018": "Dermoscopy/ISIC2018"
+    , "IDRiD": "Fundus/IDRiD"
+    , "PAPILA": "Fundus/PAPILA"
+    , "CDD-CESM": "Mammography/CDD-CESM"
+    , "AMOSMR": "MR/AMOSMR"
+    , "BraTS_FLAIR": "MR/BraTS_FLAIR"
+    , "BraTS_T1": "MR/BraTS_T1"
+    , "BraTS_T1CE": "MR/BraTS_T1CE"
+    , "CervicalCancer": "MR/CervicalCancer"
+    , "crossmoda": "MR/crossmoda"
+    , "Heart": "MR/Heart"
+    , "ISLES2022_ADC": "MR/ISLES2022_ADC"
+    , "ISLES2022_DWI": "MR/ISLES2022_DWI"
+    , "ProstateADC": "MR/ProstateADC"
+    , "ProstateT2": "MR/ProstateT2"
+    , "QIN-PROSTATE-Lesion": "MR/QIN-PROSTATE-Lesion"
+    , "QIN-PROSTATE-Prostate": "MR/QIN-PROSTATE-Prostate"
+    , "SpineMR": "MR/SpineMR"
+    , "WMH_FLAIR": "MR/WMH_FLAIR"
+    , "WMH_T1": "MR/WMH_T1"
+    , "Chest-Xray-Masks-and-Labels": "XRay/Chest-Xray-Masks-and-Labels"
+    , "COVID-19-Radiography-Database": "XRay/COVID-19-Radiography-Database"
+    , "COVID-QU-Ex-lungMask_CovidInfection": "XRay/COVID-QU-Ex-lungMask_CovidInfection"
+    , "COVID-QU-Ex-lungMask_Lung": "XRay/COVID-QU-Ex-lungMask_Lung"
+    , "Pneumothorax-Masks": "XRay/Pneumothorax-Masks"
 }
 
 possibilities_CholecSeg_8K = [
@@ -171,15 +194,13 @@ possibilities_CT_AbdTmor = [
         , "PETCT" # this one is weird too
 ]
 
-# To use the NameMapper, we need to create, for each data point, the dictionnaru with various inputs
-# for now, we will not use any mapper to associate to an modality an id
-# nor will we convert the images
-# we just want to generate the csv
-
 root_path = user.get_path_to_data()
 mapper_name = "MAPPER"
 root_saving_directory = root_path / "PROCESSED"
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--fraction", type=float, default=1.0)
+    args = argparser.parse_args()
     inputs = []
     with NameMapper(root_path / f"{mapper_name}.csv") as mapper:
         for name_dataset, rel_path in datasets_paths.items():
@@ -187,6 +208,10 @@ if __name__ == "__main__":
             path_to_dataset = root_path / rel_path
             lst_paths = sorted(path_to_dataset.glob("*.npz"))
             dataset_handler = get_handler(name_dataset)
+            if(not args.fraction == 1.0):
+                number_to_use = np.floor(args.fraction*len(lst_paths)).astype(int)
+                print("Using : {} (over {})".format(number_to_use, len(lst_paths)))
+                lst_paths = random.sample(lst_paths, k=number_to_use)
             for k, path_ in tqdm(enumerate(lst_paths)):
                 try:
                     (status, dico) = dataset_handler(path_.stem)
@@ -200,14 +225,7 @@ if __name__ == "__main__":
                     inputs.append( # npz_path, npy_root_path, new_name
                         (path_, root_saving_directory / name_dataset, new_name)
                     )
-    # npz_dir = "train_npz"
-    # npy_dir = "train_npy"
     num_workers = 4
-    # do_resize_256 = False # whether to resize images and masks to 256x256
-    # makedirs(npy_dir, exist_ok=True)
-    # makedirs(join(npy_dir, "imgs"), exist_ok=True)
-    # makedirs(join(npy_dir, "gts"), exist_ok=True)
-    # npz_paths = glob.glob(join(npz_dir, "**/*.npz"), recursive=True)
     with mp.Pool(num_workers) as p:
         r = list(tqdm(p.imap(convert_npz_to_npy, inputs), total=len(inputs)))
     
