@@ -1,17 +1,22 @@
 from os.path import join, basename
+import pandas as pd
+import sys
 from tqdm import tqdm
 import numpy as np
 import cv2
 import multiprocessing as mp
-from tqdm import tqdm
 import argparse
-import random
-
+import pathlib
+import json
+import datetime
+# local 
 from medsamtools import user
 from utils.name_mapper import (
     NameMapper
     , get_handler
+    , datasets_paths
 )
+
 
 def resize_longest_side(image, target_length=256):
     """
@@ -52,7 +57,6 @@ def convert_npz_to_npy(input_):
     npz_path : str
         Name of the npz file to be converted
     """
-    #name = npz_path.split(".npz")[0]
     npz_path, npy_root_path, new_name = input_
     try:
         name = basename(npz_path).split(".npz")[0]
@@ -113,120 +117,45 @@ def convert_npz_to_npy(input_):
             assert img_01.shape[:2] == gts.shape
             np.save(new_name_img, img_01)
             np.save(new_name_gts, gts)
-            # np.save(join(npy_dir, "imgs", name + ".npy"), img_01)
-            # np.save(join(npy_dir, "gts", name + ".npy"), gts)
     except Exception as e:
         print(e)
         print(npz_path)
 
-# Target : 
-# Pivot format <dataset a-zA-Z0-9>_<modality>_<anatomy>_<id> 
-# with id relative to the dataset (for now)
-# we need converter for each dataset 
-# What should be the image ID, should it be unique ?
-# What size should it be given ?
-# we will create a unique ID of image, which means we will allow up to 1M images
-# and will create a mapper : old name => new name
-# or rather: new unique id => dataset, id etc.
-# There should be some way to make sure this is repeatalbe (that is id are unique throughout each system)
-# what would it allow us to do, that to have unique ID ?
-
-datasets_paths = {
-    "hc18": "US/hc18"
-    , "Breast-Ultrasound": "US/Breast-Ultrasound"
-    , "autoPET": "PET/autoPET"
-    , "Intraretinal-Cystoid-Fluid": "OCT/Intraretinal-Cystoid-Fluid"
-    , "NeurIPS22CellSeg": "Microscopy/NeurIPS22CellSeg"
-    , "m2caiSeg": "Endoscopy/m2caiSeg"
-    , "Kvasir-SEG": "Endoscopy/Kvasir-SEG"
-    , "CholecSeg8k": "Endoscopy/CholecSeg8k"
-    , "CT_AbdTumor": "CT/CT_AbdTumor"
-    , "AbdomenCT1K": "CT/AbdomenCT1K"
-    , "AMOD": "CT/AMOS"
-    , "ISIC2018": "Dermoscopy/ISIC2018"
-    , "IDRiD": "Fundus/IDRiD"
-    , "PAPILA": "Fundus/PAPILA"
-    , "CDD-CESM": "Mammography/CDD-CESM"
-    , "AMOSMR": "MR/AMOSMR"
-    , "BraTS_FLAIR": "MR/BraTS_FLAIR"
-    , "BraTS_T1": "MR/BraTS_T1"
-    , "BraTS_T1CE": "MR/BraTS_T1CE"
-    , "CervicalCancer": "MR/CervicalCancer"
-    , "crossmoda": "MR/crossmoda"
-    , "Heart": "MR/Heart"
-    , "ISLES2022_ADC": "MR/ISLES2022_ADC"
-    , "ISLES2022_DWI": "MR/ISLES2022_DWI"
-    , "ProstateADC": "MR/ProstateADC"
-    , "ProstateT2": "MR/ProstateT2"
-    , "QIN-PROSTATE-Lesion": "MR/QIN-PROSTATE-Lesion"
-    , "QIN-PROSTATE-Prostate": "MR/QIN-PROSTATE-Prostate"
-    , "SpineMR": "MR/SpineMR"
-    , "WMH_FLAIR": "MR/WMH_FLAIR"
-    , "WMH_T1": "MR/WMH_T1"
-    , "Chest-Xray-Masks-and-Labels": "XRay/Chest-Xray-Masks-and-Labels"
-    , "COVID-19-Radiography-Database": "XRay/COVID-19-Radiography-Database"
-    , "COVID-QU-Ex-lungMask_CovidInfection": "XRay/COVID-QU-Ex-lungMask_CovidInfection"
-    , "COVID-QU-Ex-lungMask_Lung": "XRay/COVID-QU-Ex-lungMask_Lung"
-    , "Pneumothorax-Masks": "XRay/Pneumothorax-Masks"
-}
-
-possibilities_CholecSeg_8K = [
-    "AbdominalWall"
-    , "Blood"
-    , "ConnectiveTissue"
-    , "CysticDuct"
-    , "Fat"
-    , "Gallbladder"
-    , "GastrointestinalTract"
-    , "Grasper"
-    , "HepaticVein"
-    , "LhookElectrocautery"
-    , "Liver"
-]
-
-possibilities_CT_AbdTmor = [
-        "Adrenal"
-        , "case" # this one is weird => is it another kind of format ???
-        , "colon" 
-        , "hepaticvessel"
-        , "liver"
-        , "pancreas"
-        , "PETCT" # this one is weird too
-]
-
 root_path = user.get_path_to_data()
-mapper_name = "MAPPER"
+root_npz_directory = root_path / "NPZ"
 root_saving_directory = root_path / "PROCESSED"
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
+    argparser.add_argument("--mapper_path", type=str)
     argparser.add_argument("--fraction", type=float, default=1.0)
     args = argparser.parse_args()
-    inputs = []
-    with NameMapper(root_path / f"{mapper_name}.csv") as mapper:
-        for name_dataset, rel_path in datasets_paths.items():
-            print(f"Processing {name_dataset}...")
-            path_to_dataset = root_path / rel_path
-            lst_paths = sorted(path_to_dataset.glob("*.npz"))
-            dataset_handler = get_handler(name_dataset)
-            if(not args.fraction == 1.0):
-                number_to_use = np.floor(args.fraction*len(lst_paths)).astype(int)
-                print("Using : {} (over {})".format(number_to_use, len(lst_paths)))
-                lst_paths = random.sample(lst_paths, k=number_to_use)
-            for k, path_ in tqdm(enumerate(lst_paths)):
-                try:
-                    (status, dico) = dataset_handler(path_.stem)
-                except Exception as e:
-                    print(f"[{k}] Exception: {name_dataset} - {path_.stem} - {e}")
-                    continue
-                if(status == "KO"):
-                    print(f"[{k}] FAIL: {name_dataset} - {path_.stem} (reason: {dico})")
-                else:
-                    new_name = mapper.get_new_name(**dico)
-                    inputs.append( # npz_path, npy_root_path, new_name
-                        (path_, root_saving_directory / name_dataset, new_name)
+    args.mapper_path = pathlib.Path(args.mapper_path).resolve() 
+
+    if(not args.mapper_path.is_file()):
+        sys.exit(1)
+
+    df = pd.read_csv(args.mapper_path)
+    df = df.sample(frac=args.fraction)
+
+    def generate_inputs_from_df(df:pd.DataFrame):
+        EXPECTED_COLUMNS = ["primary_key", "dataset", "modality", "anatomy", "target_task", "old_name", "new_name", "id"]
+        assert(all( [col in df.columns for col in EXPECTED_COLUMNS] ))
+        inputs = []
+        for index, row in df.iterrows():
+            tupl = (
+                    (root_npz_directory / datasets_paths[row["dataset"]]) / "{}.npz".format(row["old_name"])
+                    , root_saving_directory / row["dataset"]
+                    , row["new_name"]
                     )
+            inputs.append(tupl)
+        return inputs
+
+    inputs = generate_inputs_from_df(df)
+    with open(root_path / f"data_frac={args.fraction}_ts={datetime.datetime.now()}.json", "w") as f:
+        json.dump(
+                {"data": df["new_name"].to_list()}
+                , f
+        )
     num_workers = 4
     with mp.Pool(num_workers) as p:
         r = list(tqdm(p.imap(convert_npz_to_npy, inputs), total=len(inputs)))
-    
-            
