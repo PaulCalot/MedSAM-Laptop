@@ -50,8 +50,8 @@ def remove_non_alphanumeric(s):
 
 id_to_root_path_mapper = {}
 for key, index in datasets_paths.items():
-    id_to_root_path_mapper[remove_non_alphanumeric(key)] = key
- 
+    id_to_root_path_mapper[remove_non_alphanumeric(key).lower()] = key
+# print(id_to_root_path_mapper)
 # id_to_root_path_mapper = {
 #     "hc18": "hc18"
 #     , "breastultrasound": "Breast-Ultrasound" 
@@ -68,7 +68,8 @@ for key, index in datasets_paths.items():
 #     , "unittest_CT": "CT_Abd"
 # }
 
-NAME_PATTERN = r'(?P<dataset>[a-zA-Z0-9]+)_(?P<modality>[a-zA-Z0-9]+)_(?P<anatomy>[a-zA-Z0-9]+)_(?P<id>[a-zA-Z0-9]+)_'
+# TODO: fix this problem - should not have the same in anatomy (my bad)
+NAME_PATTERN = r'(?P<dataset>[a-zA-Z0-9]+)_(?P<modality>[a-zA-Z0-9]+)_(?P<anatomy>[a-zA-Z0-9\ ]+)_(?P<id>[a-zA-Z0-9]+)'
 
 class IncorrectDataNameFormat(Exception):
     def __init__(self, name: str):

@@ -48,8 +48,12 @@ class BaseTrainer(abc.ABC):
                 loss.backward()
                 self.optimizer.step()
 
-                epoch_loss.append(loss.item())
-                pbar.set_description(f"Epoch {epoch} Loss: {loss.item():.4f} - Valid: {eval_loss:.4f} - Best: {best_loss:.4f}")
+                # TODO: this takes time to compute this at each batch
+                # roughly +50% compute time
+                # do better
+                loss_ = loss.item()
+                epoch_loss.append(loss_)
+                pbar.set_description(f"Epoch {epoch} Loss: {loss_:.4f} - Valid: {eval_loss:.4f} - Best: {best_loss:.4f}")
 
             # End of the epoch, compute validation loss
             with torch.no_grad():

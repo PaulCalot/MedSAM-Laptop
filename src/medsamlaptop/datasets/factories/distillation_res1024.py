@@ -8,6 +8,8 @@ class Distillation1024Factory(DatasetFactoryInterface):
 
     def create_dataset(self) -> EncoderDistillationDataset:
         return EncoderDistillationDataset(
-            data_root=self.path_to_data
+            self.path_to_data
+            , data_root=self.path_to_data.parent
             , image_size=1024
         )
+
