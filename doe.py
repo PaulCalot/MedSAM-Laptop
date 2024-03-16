@@ -31,4 +31,4 @@ python scripts/train_one_gpu.py \
 for command in tqdm.tqdm(commands):
     print(f"\n #-----------NEW TRAINING---------# \n")
     os.system(command)
-    break
+    # break

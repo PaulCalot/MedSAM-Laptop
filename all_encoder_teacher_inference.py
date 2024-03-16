@@ -6,7 +6,7 @@ command_pattern = """python scripts/teacher_inference.py \
     --data_root {} \
     --pretrained_checkpoint med-sam/medsam_vit_b.pth \
     --model_type MedSAM \
-    --device cuda:0
+    --device cuda:0 \
     --run_type encoder-inference
 """
 
