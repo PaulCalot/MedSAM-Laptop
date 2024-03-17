@@ -10,6 +10,9 @@ import pathlib
 import sys
 import numpy as np
 import tqdm
+from torch.utils.data import (
+    DataLoader
+)
 
 # local packages
 from medsamlaptop import constants
@@ -19,6 +22,7 @@ from medsamlaptop.models.products.interface import SegmentAnythingModelInterface
 from medsamlaptop.datasets.products.npy import NpyDataset # this is a concrete class
 from medsamlaptop import datasets as medsamlaptop_datasets
 from medsamtools import user
+from utils.my_async import AsyncArraySaver
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -43,7 +47,14 @@ parser.add_argument(
     "--device", type=str, default="cuda:0",
     help="Device to train on."
 )
-
+parser.add_argument(
+    "--batch_size", type=int, default=8,
+    help="Batch size for intererence"
+)
+parser.add_argument(
+    "--num_workers", type=int, default=4,
+    help="Number of workers to load data"
+)
 args = parser.parse_args()
 args.data_root = user.get_path_to_data() / args.data_root
 # TODO: make it better, here we suppose that a mistake is still a teacher_gts...
@@ -83,24 +94,29 @@ else:
 model: SegmentAnythingModelInterface = facade.get_model().eval()
 dataset: NpyDataset = facade.get_dataset()
 assert(isinstance(dataset, NpyDataset))
+dataloader = DataLoader(dataset
+          , batch_size=args.batch_size
+          , num_workers=args.num_workers
+          , shuffle=False
+          , pin_memory=True)
+async_saver = AsyncArraySaver(args.output_dir, max_workers=args.num_workers)
 with torch.no_grad():
     model = model.to(args.device)
-    for i in tqdm.tqdm(range(len(dataset))):
-        # TODO: this output is a dictionnary, may be we want an interface
-        output = dataset[i]
-        img_tensor = output["image"].to(args.device)
-        name = output["image_name"]
+    for batch_ in tqdm.tqdm(dataloader):
+        img_tensors = batch_["image"].to(args.device)
+        names = batch_["image_name"]
         if(args.run_type == constants.ENCODER_INFERENCE_RUN_TYPE):
-            image_embedding = model.image_encoder(torch.unsqueeze(img_tensor, 0))  # output: (1, 256, 64, 64)
+            image_embedding = model.image_encoder(img_tensors)  # output: (1, 256, 64, 64)
             image_embedding = image_embedding.cpu().numpy()
-            np.save(args.output_dir / name # name already contains .npy
-                    , image_embedding)
+            async_saver.save_arrays(image_embedding, names)
+            # np.save(args.output_dir / name # name already contains .npy
+            #         , image_embedding)
         elif(args.run_type == constants.FULL_INFERENCE_RUN_TYPE):
-            # Requires more input
-            boxes = output["bboxes"].to(args.device)
-            (masks, iou_predictions) = model(torch.unsqueeze(img_tensor, 0)
-                                             , torch.unsqueeze(boxes, 0))
+            boxes = batch_["bboxes"].to(args.device)
+            (masks, iou_predictions) = model(img_tensor
+                                             , boxes)
             masks = masks.cpu().numpy()
-            np.save(args.output_dir / name
-                    , masks)
+            async_saver.save_arrays(masks, names)
+            # np.save(args.output_dir / name
+            #         , masks)
 
