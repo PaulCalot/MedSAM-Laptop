@@ -51,22 +51,7 @@ def remove_non_alphanumeric(s):
 id_to_root_path_mapper = {}
 for key, index in datasets_paths.items():
     id_to_root_path_mapper[remove_non_alphanumeric(key).lower()] = key
-# print(id_to_root_path_mapper)
-# id_to_root_path_mapper = {
-#     "hc18": "hc18"
-#     , "breastultrasound": "Breast-Ultrasound" 
-#     , "autopet": "autoPET"
-#     , "intraretinalcystoidfluid": "Intraretinal-Cystoid-Fluid"
-#     , "Neurips22cellseg": "NeurIPS22CellSeg"
-#     , "m2caiseg": "m2caiSeg"
-#     , "kvasirseg": "Kvasir-SEG" 
-#     , "cholecseg8k": "CholecSeg8k"
-#     , "ctabdtumor": "CT_AbdTumor"
-#     , "abdomenct1k": "AbdomenCT1K"
-#     , "amod": "AMOD"
-#     # Unittest - to be handled differently - TODO: move this out
-#     , "unittest_CT": "CT_Abd"
-# }
+id_to_root_path_mapper["unittest_CT"] = "CT_Abd"
 
 # TODO: fix this problem - should not have the same in anatomy (my bad)
 NAME_PATTERN = r'(?P<dataset>[a-zA-Z0-9]+)_(?P<modality>[a-zA-Z0-9]+)_(?P<anatomy>[a-zA-Z0-9\ ]+)_(?P<id>[a-zA-Z0-9]+)'
@@ -78,6 +63,9 @@ class IncorrectDataNameFormat(Exception):
     def __str__(self):
         return f"Name was: {self.name}, was expecting: {NAME_PATTERN}"
 
+def dictionary_of_lists_to_list_of_dictionaries(dict_of_lists):
+    return [dict(zip(dict_of_lists.keys(), values)) for values in zip(*dict_of_lists.values())]
+
 class JsonDataParser:
     def __init__(self
                  , json_data_file: Dict
@@ -87,6 +75,7 @@ class JsonDataParser:
         self.root_dir = root_path
 
     def get_paths(self, subfolders):
+        assert(len(subfolders) > 0)
         paths = {}
         for name in self.data:
             (status, info_name) = self.make_paths_for_name(
@@ -94,8 +83,16 @@ class JsonDataParser:
                                         , subfolders)
             if(status == "KO"):
                 logger.warning(f"Failed to load data for name = {name} (error = {info_name})")
-            else:
+            elif(status == "OK_2D"):
                 paths[name] = info_name
+            elif(status == "OK_3D"):
+                lst_info_name = dictionary_of_lists_to_list_of_dictionaries(info_name)
+                subfolder_1 = subfolders[0]
+                for elem in lst_info_name:
+                    name_ = elem[subfolder_1].stem
+                    paths[name_] = elem
+            else:
+                logger.warning(f"Unexpected status: {status}")
         return paths
 
     def parse_name(self, name: str):
@@ -119,12 +116,31 @@ class JsonDataParser:
             return ("KO", f"Missing dataset key in mapper: {dataset_id}")
         dataset_name = id_to_root_path_mapper[dataset_id]
         paths = {}
+        status_ = None
         for subfolder in subfolders:
-            path = (((self.root_dir / processed_root_dir) / dataset_name) / subfolder) / f"{name}.npy"
-            if(not path.is_file()):
-                return ("KO", f"Data does not exist: {path}")
-            paths[subfolder] = path
-        return ("OK", paths)
+            path = ((self.root_dir / processed_root_dir) / dataset_name) / subfolder
+            # path = (((self.root_dir / processed_root_dir) / dataset_name) / subfolder) / f"{name}.npy"
+            status, output = self.handle_path(path, name)
+            if(status == "KO"): 
+                return ("KO", output)
+            elif((status_ is not None) and (status_ != status)):
+                return ("KO", f"Mismatch in subfolder types: {path} / {name}")
+            else:
+                status_ = status
+            paths[subfolder] = output 
+        return (status_, paths)
+    
+    def handle_path(self, root_dir: pathlib.Path, name: str):
+        path_2D = root_dir / f"{name}.npy"
+        if(path_2D.is_file()):
+            return ("OK_2D", path_2D)
+        
+        # check if 3D
+        list_path_3D = list(root_dir.glob(f"{name}_*.npy")) # TODO: not ideal
+        # list_path_3D = list(root_dir.glob(name + r"_[0-9]{3}.npy"))
+        if(len(list_path_3D) > 0):
+            return ("OK_3D", list_path_3D)
+        return ("KO", f"Data does not exist: {root_dir} - {name}")
 
     def try_dataset_parser(self, name:str):
         match = re.match(NAME_PATTERN, name)

@@ -31,8 +31,8 @@ class TrainSegmentAnythingPipeFacade:
         representation_parts = [
                 "Training parameters:\n\t"
                 , f"\tModel:{str(self.model.__class__)}"
-                , f"\tTrain Dataset:{str(self.train_set)}"
-                , f"\tValid Dataset:{str(self.valid_set)}"
+                , f"\tTrain Dataset:{str(self.train_set)} (len: {len(self.train_set)})"
+                , f"\tValid Dataset:{str(self.valid_set)} (len: {len(self.valid_set)})"
                 , f"\tOptimizer:{str(self.optimizer)}"
                 , f"\tScheduler:{str(self.scheduler)}"
                 , f"\tLoss:{str(self.loss)}"
